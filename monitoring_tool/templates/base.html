@@ -17,6 +17,7 @@
       </div>
       <nav class="nav-links">
          <a class="nav-link {{ 'active' if request.endpoint == 'configure' else 'inactive' }}" href="{{ url_for('configure') }}">Configure Processes</a>
+         <a class="nav-link {{ 'active' if request.endpoint == 'folders' else 'inactive' }}" href="{{ url_for('folders') }}">Folder Paths</a>
          <a class="nav-link {{ 'active' if request.endpoint == 'recipients' else 'inactive' }}" href="{{ url_for('recipients') }}">Email Recipients</a>
          <a class="nav-link {{ 'active' if request.endpoint == 'reports' else 'inactive' }}" href="{{ url_for('reports') }}">Failure Reports</a>
        </nav>

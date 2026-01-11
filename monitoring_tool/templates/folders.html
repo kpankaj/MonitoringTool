@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Workflow</p>
+      <h2>Configure Folder Paths</h2>
+    </div>
+    <span class="helper-text">Assign folder paths to existing interfaces.</span>
+  </div>
+  <form method="post" class="form-grid">
+    <label>
+      Interface Name
+      <select name="tag_name" required>
+        <option value="" disabled selected>Select an interface</option>
+        {% for tag in tags %}
+          <option value="{{ tag }}">{{ tag }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>
+      Folder Path
+      <input type="text" name="folder_path" placeholder="/var/monitoring/billing" required>
+    </label>
+    <button type="submit" class="button primary">Save Folder</button>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Inventory</p>
+      <h2>Configured Folders</h2>
+    </div>
+    <span class="helper-text">Folder paths currently in use.</span>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Tag</th>
+        <th>Folder</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for folder in folders %}
+        <tr>
+          <td>{{ folder.tag_name }}</td>
+          <td>{{ folder.folder_path }}</td>
+          <td>
+            <form method="post" action="{{ url_for('delete_folder') }}">
+              <input type="hidden" name="tag_name" value="{{ folder.tag_name }}">
+              <button type="submit" class="button ghost">Remove</button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="3">No folders configured.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
