@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Alerts</p>
+      <h2>Manage Email Recipients</h2>
+    </div>
+    <span class="helper-text">Add people who receive monitoring alerts.</span>
+  </div>
+  <form method="post" class="form-grid">
+    <label>
+      Email
+      <input type="email" name="email" placeholder="ops@example.com" required>
+    </label>
+    <button type="submit" class="button primary">Add Recipient</button>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Distribution</p>
+      <h2>Recipients</h2>
+    </div>
+    <span class="helper-text">People who receive alerts.</span>
+  </div>
+  <ul class="pill-list">
+    {% for email in recipients %}
+      <li>{{ email }}</li>
+    {% else %}
+      <li>No recipients configured.</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

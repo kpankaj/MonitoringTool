@@ -16,12 +16,24 @@ def create_app() -> Flask:
     def index():
         return redirect(url_for("configure"))
 
+    @app.route("/recipients", methods=["GET", "POST"])
+    def recipients():
+        if request.method == "POST":
+            email = request.form.get("email", "").strip()
+            if email:
+                process_service.add_recipient(email)
+                flash(f"Added recipient {email}.", "success")
+            return redirect(url_for("recipients"))
+
+        recipients_list = process_service.list_recipients()
+        return render_template("recipients.html", recipients=recipients_list)
+
+
     @app.route("/configure", methods=["GET", "POST"])
     def configure():
         if request.method == "POST":
             tag_name = request.form.get("tag_name", "").strip()
             folder_path = request.form.get("folder_path", "").strip()
-            email = request.form.get("email", "").strip()
 
             if tag_name and folder_path:
                 try:
@@ -29,15 +41,11 @@ def create_app() -> Flask:
                     flash(f"Added process {tag_name}.", "success")
                 except Exception as exc:  # noqa: BLE001
                     flash(f"Failed to add process: {exc}", "error")
-            if email:
-                process_service.add_recipient(email)
-                flash(f"Added recipient {email}.", "success")
 
             return redirect(url_for("configure"))
 
         processes = process_service.list_processes()
-        recipients = process_service.list_recipients()
-        return render_template("configure.html", processes=processes, recipients=recipients)
+        return render_template("configure.html", processes=processes)
 
     @app.route("/reports", methods=["GET", "POST"])
     def reports():

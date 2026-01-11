@@ -10,14 +10,15 @@
     <header class="topbar">
       <div class="brand">
         <div>
-          <p class="eyebrow">Monitoring Suite</p>
-          <h1>MonitoringTool</h1>
+          <p class="eyebrow">MAMS</p>
+          <h1> Monitoring Tool</h1>
         </div>
-        <span class="status-pill">System Status Dashboard</span>
+        <span class="status-pill">MAMS Dashboard</span>
       </div>
       <nav class="nav-links">
-         <a href="{{ url_for('configure') }}">Configure Processes</a>
-         <a href="{{ url_for('reports') }}">Failure Reports</a>
+         <a class="nav-link {{ 'active' if request.endpoint == 'configure' else 'inactive' }}" href="{{ url_for('configure') }}">Configure Processes</a>
+         <a class="nav-link {{ 'active' if request.endpoint == 'recipients' else 'inactive' }}" href="{{ url_for('recipients') }}">Email Recipients</a>
+         <a class="nav-link {{ 'active' if request.endpoint == 'reports' else 'inactive' }}" href="{{ url_for('reports') }}">Failure Reports</a>
        </nav>
      </header>
  
@@ -34,4 +35,5 @@
        {% block content %}{% endblock %}
      </main>
    </body>
+  <br
  </html>
