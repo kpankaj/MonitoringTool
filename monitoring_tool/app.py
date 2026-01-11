@@ -58,6 +58,7 @@ def create_app() -> Flask:
         if request.method == "POST":
             tag_name = request.form.get("tag_name", "").strip()
             folder_path = request.form.get("folder_path", "").strip()
+            check_uc4_file = request.form.get("check_uc4_file") == "on"
             existing_tags = set(process_service.list_tags())
 
             if not tag_name or not folder_path:
@@ -68,7 +69,7 @@ def create_app() -> Flask:
                 flash(f"Unknown tag {tag_name}. Add it on the Configure page first.", "error")
                 return redirect(url_for("folders"))
 
-            process_service.set_folder(tag_name, folder_path)
+            process_service.set_folder(tag_name, folder_path, check_uc4_file)
             flash(f"Saved folder for {tag_name}.", "success")
             return redirect(url_for("folders"))
 

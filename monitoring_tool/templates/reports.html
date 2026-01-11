@@ -43,6 +43,12 @@
           </th>
           <th scope="col" aria-sort="none">
             <button class="sort-button" type="button" data-sort-index="4">
+              UC4 Status check
+              <span class="sort-indicator" aria-hidden="true"></span>
+            </button>
+          </th>
+          <th scope="col" aria-sort="none">
+            <button class="sort-button" type="button" data-sort-index="5">
               Status
               <span class="sort-indicator" aria-hidden="true"></span>
             </button>
@@ -76,6 +82,8 @@
                 <span class="muted">None</span>
               {% endif %}
             </td>
+            <td>{{ process.uc4_status }}</td>
+
             <td>
               <span class="status-badge {{ process.status_class }}">{{ process.status }}</span>
             </td>

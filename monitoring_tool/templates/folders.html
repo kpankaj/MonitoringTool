@@ -23,6 +23,10 @@
       Folder Path
       <input type="text" name="folder_path" placeholder="/archive" required>
     </label>
+    <label class="checkbox-field">
+      <input type="checkbox" name="check_uc4_file">
+      Check UC4 File
+    </label>
     <button type="submit" class="button primary">Save Folder Location</button>
   </form>
 </section>
@@ -40,6 +44,7 @@
       <tr>
         <th>Tag</th>
         <th>Folder</th>
+        <th>UC4 File Check</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -48,6 +53,8 @@
         <tr>
           <td>{{ folder.tag_name }}</td>
           <td>{{ folder.folder_path }}</td>
+          <td>{{ "Enabled" if folder.check_uc4_file else "Not enabled" }}</td>
+
           <td>
             <form method="post" action="{{ url_for('delete_folder') }}">
               <input type="hidden" name="tag_name" value="{{ folder.tag_name }}">
@@ -57,7 +64,7 @@
         </tr>
       {% else %}
         <tr>
-          <td colspan="3">No folders configured.</td>
+          <td colspan="4">No folders configured.</td>
         </tr>
       {% endfor %}
     </tbody>

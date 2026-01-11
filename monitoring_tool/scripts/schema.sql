@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS processes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tag_name TEXT NOT NULL UNIQUE,
     folder_path TEXT NOT NULL,
+    check_uc4_file INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
