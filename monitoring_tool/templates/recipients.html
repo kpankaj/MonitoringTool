@@ -28,8 +28,14 @@
   </div>
   <ul class="pill-list">
     {% for email in recipients %}
-      <li>{{ email }}</li>
-    {% else %}
+    <li class="pill-item">
+      <span>{{ email }}</span>
+      <form method="post" action="{{ url_for('delete_recipient') }}" class="inline-form">
+        <input type="hidden" name="email" value="{{ email }}">
+        <button type="submit" class="pill-button">X</button>
+      </form>
+    </li>
+  {% else %}
       <li>No recipients configured.</li>
     {% endfor %}
   </ul>

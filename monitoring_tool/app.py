@@ -28,7 +28,14 @@ def create_app() -> Flask:
         recipients_list = process_service.list_recipients()
         return render_template("recipients.html", recipients=recipients_list)
 
-
+    @app.route("/recipients/delete", methods=["POST"])
+    def delete_recipient():
+        email = request.form.get("email", "").strip()
+        if email:
+            process_service.remove_recipient(email)
+            flash(f"Removed recipient {email}.", "success")
+        return redirect(url_for("recipients"))
+    
     @app.route("/configure", methods=["GET", "POST"])
     def configure():
         if request.method == "POST":

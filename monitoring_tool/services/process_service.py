@@ -20,3 +20,6 @@ def list_recipients() -> list[str]:
 
 def add_recipient(email: str) -> None:
     db.execute("INSERT OR IGNORE INTO notification_recipients (email) VALUES (?)", [email])
+
+def remove_recipient(email: str) -> None:
+    db.execute("DELETE FROM notification_recipients WHERE email = ?", [email])

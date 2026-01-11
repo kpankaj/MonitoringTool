@@ -270,6 +270,28 @@ th {
   box-shadow: 0 8px 14px rgba(99, 102, 241, 0.18);
 }
 
+.pill-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.pill-button {
+  border: none;
+  background: transparent;
+  color: #1d4ed8;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: none;
+}
+
+.pill-button:hover {
+  text-decoration: underline;
+  box-shadow: none;
+  transform: none;
+}
+
 .inline-form {
   margin-top: 0;
 }
