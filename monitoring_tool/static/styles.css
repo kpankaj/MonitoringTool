@@ -1,0 +1,156 @@
+:root {
+    color-scheme: light;
+    font-family: "Segoe UI", sans-serif;
+    background: #f5f7fb;
+    color: #1f2933;
+  }
+  
+  body {
+    margin: 0;
+  }
+  
+  header {
+    background: #1f2933;
+    color: #f5f7fb;
+    padding: 1.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  nav {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  nav a {
+    color: #f5f7fb;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  
+  main {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .panel {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  }
+  
+  .form-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    align-items: end;
+  }
+  
+  .form-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-weight: 600;
+  }
+  
+  input {
+    padding: 0.6rem;
+    border-radius: 8px;
+    border: 1px solid #d6dce5;
+  }
+  
+  button {
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    border: none;
+    background: #2563eb;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background: #1d4ed8;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  th,
+  td {
+    text-align: left;
+    padding: 0.6rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .flash-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .flash {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+  
+  .flash.success {
+    background: #dcfce7;
+    color: #166534;
+  }
+  
+  .flash.error {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+  
+  .report-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .report-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 1rem;
+    background: #f8fafc;
+  }
+  
+  .muted {
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+  
+  .pill-list {
+    list-style: none;
+    display: flex;
+    gap: 0.6rem;
+    padding: 0;
+    margin: 0;
+    flex-wrap: wrap;
+  }
+  
+  .pill-list li {
+    background: #e0e7ff;
+    color: #3730a3;
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+  
+  .inline-form {
+    margin-top: 0.5rem;
+  }
+  

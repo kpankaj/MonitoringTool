@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel">
+  <h2>Failed Processes</h2>
+  <form method="post" class="inline-form">
+    <button type="submit">Send Email Notification</button>
+  </form>
+  {% if failed %}
+    <div class="report-grid">
+      {% for process in failed %}
+        <article class="report-card">
+          <h3>{{ process.tag_name }}</h3>
+          <p class="muted">{{ process.folder_path }}</p>
+          <ul>
+            {% for reason in process.reasons %}
+              <li>{{ reason }}</li>
+            {% endfor %}
+          </ul>
+          {% if process.fatal_events %}
+            <details>
+              <summary>Fatal events</summary>
+              <ul>
+                {% for event in process.fatal_events %}
+                  <li>{{ event.event_time }} - {{ event.description }}</li>
+                {% endfor %}
+              </ul>
+            </details>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>All monitored processes are healthy.</p>
+  {% endif %}
+</section>
+{% endblock %}
