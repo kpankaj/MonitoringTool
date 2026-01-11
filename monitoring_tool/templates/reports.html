@@ -12,32 +12,55 @@
       <button type="submit" class="button primary">Send Email Notification</button>
     </form>
   </div>
-   {% if failed %}
-     <div class="report-grid">
-       {% for process in failed %}
-         <article class="report-card">
-           <h3>{{ process.tag_name }}</h3>
-           <p class="muted">{{ process.folder_path }}</p>
-           <ul>
-             {% for reason in process.reasons %}
-               <li>{{ reason }}</li>
-             {% endfor %}
-           </ul>
-           {% if process.fatal_events %}
-             <details>
-               <summary>Fatal events</summary>
-               <ul>
-                 {% for event in process.fatal_events %}
-                   <li>{{ event.event_time }} - {{ event.description }}</li>
-                 {% endfor %}
-               </ul>
-             </details>
-           {% endif %}
-         </article>
-       {% endfor %}
+  {% if report_rows %}
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Tag</th>
+          <th>Folder</th>
+          <th>Reasons</th>
+          <th>Fatal events</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for process in report_rows %}
+          <tr>
+            <td>{{ process.tag_name }}</td>
+            <td>{{ process.folder_path }}</td>
+            <td>
+              {% if process.reasons %}
+                <ul>
+                  {% for reason in process.reasons %}
+                    <li>{{ reason }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <span class="muted">No issues</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if process.fatal_events %}
+                <ul>
+                  {% for event in process.fatal_events %}
+                    <li>{{ event.event_time }} - {{ event.description }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <span class="muted">None</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="status-badge {{ process.status_class }}">{{ process.status }}</span>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
      </div>
    {% else %}
-   <p class="muted">No failures detected.</p>
+   <p class="muted">No monitored processes configured.</p>
    {% endif %}
  </section>
  {% endblock %}

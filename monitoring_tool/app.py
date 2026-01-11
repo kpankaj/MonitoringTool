@@ -14,7 +14,7 @@ def create_app() -> Flask:
 
     @app.route("/")
     def index():
-        return redirect(url_for("configure"))
+        return redirect(url_for("reports"))
 
     @app.route("/recipients", methods=["GET", "POST"])
     def recipients():
@@ -40,24 +40,56 @@ def create_app() -> Flask:
     def configure():
         if request.method == "POST":
             tag_name = request.form.get("tag_name", "").strip()
-            folder_path = request.form.get("folder_path", "").strip()
 
-            if tag_name and folder_path:
+            if tag_name:
                 try:
-                    process_service.add_process(tag_name, folder_path)
+                    process_service.add_tag(tag_name)
                     flash(f"Added process {tag_name}.", "success")
                 except Exception as exc:  # noqa: BLE001
                     flash(f"Failed to add process: {exc}", "error")
 
             return redirect(url_for("configure"))
 
-        processes = process_service.list_processes()
-        return render_template("configure.html", processes=processes)
+        tags = process_service.list_tags()
+        return render_template("configure.html", tags=tags)
+
+    @app.route("/folders", methods=["GET", "POST"])
+    def folders():
+        if request.method == "POST":
+            tag_name = request.form.get("tag_name", "").strip()
+            folder_path = request.form.get("folder_path", "").strip()
+            existing_tags = set(process_service.list_tags())
+
+            if not tag_name or not folder_path:
+                flash("Tag name and folder path are required.", "error")
+                return redirect(url_for("folders"))
+
+            if tag_name not in existing_tags:
+                flash(f"Unknown tag {tag_name}. Add it on the Configure page first.", "error")
+                return redirect(url_for("folders"))
+
+            process_service.set_folder(tag_name, folder_path)
+            flash(f"Saved folder for {tag_name}.", "success")
+            return redirect(url_for("folders"))
+
+        tags = process_service.list_tags()
+        folders = process_service.list_folder_configs()
+        return render_template("folders.html", tags=tags, folders=folders)
+
+    @app.route("/folders/delete", methods=["POST"])
+    def delete_folder():
+        tag_name = request.form.get("tag_name", "").strip()
+        if tag_name:
+            process_service.clear_folder(tag_name)
+            flash(f"Removed folder for {tag_name}.", "success")
+        return redirect(url_for("folders"))
 
     @app.route("/reports", methods=["GET", "POST"])
     def reports():
         processes = process_service.list_processes()
-        failed = report_service.list_failed_processes(processes)
+        report_rows = report_service.list_process_reports(processes)
+        failed = [row for row in report_rows if row["status"] == "Failed"]
+
 
         if request.method == "POST":
             recipients = process_service.list_recipients()
@@ -84,9 +116,8 @@ def create_app() -> Flask:
             except Exception as exc:  # noqa: BLE001
                 flash(f"Failed to send email: {exc}", "error")
 
-            return redirect(url_for("reports"))
 
-        return render_template("reports.html", failed=failed)
+        return render_template("reports.html", report_rows=report_rows)
 
     return app
 
