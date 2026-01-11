@@ -5,23 +5,48 @@
  <section class="panel">
   <div class="panel-header">
     <div>
-      <p class="eyebrow">Insights</p>
-      <h2>Failed Processes</h2>
+      <p class="eyebrow">MAMS</p>
+      <h2>Mointored Interfaces</h2>
     </div>
     <form method="post" class="inline-form">
-      <button type="submit" class="button primary">Send Email Notification</button>
+      <button type="submit" class="button primary">Send Email Notifcation</button>
     </form>
   </div>
   {% if report_rows %}
   <div class="table-wrapper">
-    <table>
+    <table data-report-table>
       <thead>
         <tr>
-          <th>Tag</th>
-          <th>Folder</th>
-          <th>Reasons</th>
-          <th>Fatal events</th>
-          <th>Status</th>
+          <th scope="col" aria-sort="none">
+            <button class="sort-button" type="button" data-sort-index="0">
+              Tag
+              <span class="sort-indicator" aria-hidden="true"></span>
+            </button>
+          </th>
+          <th scope="col" aria-sort="none">
+            <button class="sort-button" type="button" data-sort-index="1">
+              Folder
+              <span class="sort-indicator" aria-hidden="true"></span>
+            </button>
+          </th>
+          <th scope="col" aria-sort="none">
+            <button class="sort-button" type="button" data-sort-index="2">
+              Reasons
+              <span class="sort-indicator" aria-hidden="true"></span>
+            </button>
+          </th>
+          <th scope="col" aria-sort="none">
+            <button class="sort-button" type="button" data-sort-index="3">
+              Fatal events
+              <span class="sort-indicator" aria-hidden="true"></span>
+            </button>
+          </th>
+          <th scope="col" aria-sort="none">
+            <button class="sort-button" type="button" data-sort-index="4">
+              Status
+              <span class="sort-indicator" aria-hidden="true"></span>
+            </button>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -59,8 +84,135 @@
       </tbody>
     </table>
      </div>
+     <div class="table-footer">
+      <p class="muted" data-page-summary></p>
+      <div class="pagination-controls" data-pagination></div>
+    </div>
    {% else %}
    <p class="muted">No monitored processes configured.</p>
    {% endif %}
  </section>
+ <script>
+  const reportTable = document.querySelector("[data-report-table]");
+
+  if (reportTable) {
+    const tbody = reportTable.querySelector("tbody");
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    const sortButtons = Array.from(document.querySelectorAll(".sort-button"));
+    const pageSummary = document.querySelector("[data-page-summary]");
+    const paginationControls = document.querySelector("[data-pagination]");
+    const pageSize = 25;
+    let currentPage = 1;
+    let sortIndex = null;
+    let sortDirection = "asc";
+
+    const normalizeValue = (value) => value.replace(/\s+/g, " ").trim().toLowerCase();
+
+    const getCellValue = (row, index) => {
+      const cell = row.children[index];
+      return cell ? normalizeValue(cell.innerText) : "";
+    };
+
+    const updateSortIndicators = () => {
+      sortButtons.forEach((button) => {
+        const header = button.closest("th");
+        const indicator = button.querySelector(".sort-indicator");
+        const index = Number(button.dataset.sortIndex);
+
+        if (index === sortIndex) {
+          header.setAttribute("aria-sort", sortDirection === "asc" ? "ascending" : "descending");
+          indicator.textContent = sortDirection === "asc" ? "▲" : "▼";
+        } else {
+          header.setAttribute("aria-sort", "none");
+          indicator.textContent = "";
+        }
+      });
+    };
+
+    const applySort = () => {
+      if (sortIndex === null) {
+        return;
+      }
+
+      rows.sort((a, b) => {
+        const valueA = getCellValue(a, sortIndex);
+        const valueB = getCellValue(b, sortIndex);
+
+        if (valueA === valueB) {
+          return 0;
+        }
+
+        const direction = sortDirection === "asc" ? 1 : -1;
+        return valueA > valueB ? direction : -direction;
+      });
+
+      rows.forEach((row) => tbody.appendChild(row));
+    };
+
+    const renderPagination = () => {
+      const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+      currentPage = Math.min(currentPage, totalPages);
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+
+      rows.forEach((row, index) => {
+        row.style.display = index >= start && index < end ? "" : "none";
+      });
+
+      if (pageSummary) {
+        const totalRows = rows.length;
+        const startRow = totalRows === 0 ? 0 : start + 1;
+        const endRow = Math.min(end, totalRows);
+        pageSummary.textContent = `Showing ${startRow}-${endRow} of ${totalRows} entries`;
+      }
+
+      if (paginationControls) {
+        paginationControls.innerHTML = "";
+
+        const prevButton = document.createElement("button");
+        prevButton.type = "button";
+        prevButton.textContent = "Previous";
+        prevButton.disabled = currentPage === 1;
+        prevButton.addEventListener("click", () => {
+          currentPage = Math.max(1, currentPage - 1);
+          renderPagination();
+        });
+        paginationControls.appendChild(prevButton);
+
+        const pageIndicator = document.createElement("span");
+        pageIndicator.className = "page-indicator";
+        pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+        paginationControls.appendChild(pageIndicator);
+
+        const nextButton = document.createElement("button");
+        nextButton.type = "button";
+        nextButton.textContent = "Next";
+        nextButton.disabled = currentPage === totalPages;
+        nextButton.addEventListener("click", () => {
+          currentPage = Math.min(totalPages, currentPage + 1);
+          renderPagination();
+        });
+        paginationControls.appendChild(nextButton);
+      }
+    };
+
+    sortButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const newIndex = Number(button.dataset.sortIndex);
+        if (sortIndex === newIndex) {
+          sortDirection = sortDirection === "asc" ? "desc" : "asc";
+        } else {
+          sortIndex = newIndex;
+          sortDirection = "asc";
+        }
+        applySort();
+        updateSortIndicators();
+        renderPagination();
+      });
+    });
+
+    updateSortIndicators();
+    renderPagination();
+  }
+ </script>
  {% endblock %}

@@ -4,18 +4,18 @@
  <section class="panel">
   <div class="panel-header">
     <div>
-      <p class="eyebrow">Workflow</p>
-      <h2>Configure Tags</h2>
+      <p class="eyebrow"></p>
+      <h2>Configure Interfaces</h2>
     </div>
-    <span class="helper-text">Track tags to monitor.</span>
+    <span class="helper-text">Track Interfaces to monitor.</span>
   </div>
    <form method="post" class="form-grid">
      <label>
-       Tag Name
-       <input type="text" name="tag_name" placeholder="billing-job" required>
+       Interface Name
+       <input type="text" name="tag_name" placeholder="interface-name" required>
      </label>
      
-    <button type="submit" class="button primary">Add Tag</button>
+    <button type="submit" class="button primary">Add Interface</button>
    </form>
  </section>
  
@@ -23,10 +23,10 @@
  <section class="panel">
   <div class="panel-header">
     <div>
-      <p class="eyebrow">Inventory</p>
-      <h2>Current Tags</h2>
+      <p class="eyebrow"></p>
+      <h2>Current Interfaces</h2>
     </div>
-    <span class="helper-text">Monitored Tags</span>
+    <span class="helper-text">Monitored Interfaces</span>
   </div>
    <table>
      <thead>
@@ -48,7 +48,7 @@
          </tr>
        {% else %}
          <tr>
-          <td colspan="2">No tags configured.</td>
+          <td colspan="2">No Interfaces configured.</td>
         </tr>
        {% endfor %}
      </tbody>

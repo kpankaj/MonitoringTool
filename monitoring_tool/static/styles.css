@@ -207,10 +207,68 @@ th {
   font-size: 0.75rem;
   letter-spacing: 0.12em;
 }
+.sort-button {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: none;
+}
+
+.sort-button:hover {
+  color: #1d4ed8;
+  transform: none;
+  box-shadow: none;
+}
+
+.sort-indicator {
+  font-size: 0.6rem;
+}
+
 
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
+}
+
+
+.table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.pagination-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pagination-controls button {
+  background: #e2e8f0;
+  color: #1e293b;
+  box-shadow: none;
+}
+
+.pagination-controls button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.page-indicator {
+  font-weight: 600;
+  color: #475569;
 }
 
 .status-badge {
