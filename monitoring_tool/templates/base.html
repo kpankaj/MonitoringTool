@@ -16,10 +16,17 @@
         <span class="status-pill">MAMS Dashboard</span>
       </div>
       <nav class="nav-links">
-         <a class="nav-link {{ 'active' if request.endpoint == 'configure' else 'inactive' }}" href="{{ url_for('configure') }}">Configure Processes</a>
-         <a class="nav-link {{ 'active' if request.endpoint == 'folders' else 'inactive' }}" href="{{ url_for('folders') }}">Folder Paths</a>
-         <a class="nav-link {{ 'active' if request.endpoint == 'recipients' else 'inactive' }}" href="{{ url_for('recipients') }}">Email Recipients</a>
          <a class="nav-link {{ 'active' if request.endpoint == 'reports' else 'inactive' }}" href="{{ url_for('reports') }}">Failure Reports</a>
+         <div class="nav-item dropdown {{ 'active' if request.endpoint in ['configure', 'folders', 'recipients'] else 'inactive' }}">
+          <button class="nav-link dropdown-toggle {{ 'active' if request.endpoint in ['configure', 'folders', 'recipients'] else 'inactive' }}" type="button">
+            Admin
+          </button>
+          <div class="dropdown-menu">
+            <a class="dropdown-link {{ 'active' if request.endpoint == 'configure' else 'inactive' }}" href="{{ url_for('configure') }}">Configure Processes</a>
+            <a class="dropdown-link {{ 'active' if request.endpoint == 'folders' else 'inactive' }}" href="{{ url_for('folders') }}">Folder Paths</a>
+            <a class="dropdown-link {{ 'active' if request.endpoint == 'recipients' else 'inactive' }}" href="{{ url_for('recipients') }}">Email Recipients</a>
+          </div>
+        </div>
        </nav>
      </header>
  
