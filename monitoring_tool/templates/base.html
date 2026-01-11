@@ -1,31 +1,37 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>MonitoringTool</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  </head>
-  <body>
-    <header>
-      <h1>MonitoringTool</h1>
-      <nav>
-        <a href="{{ url_for('configure') }}">Configure Processes</a>
-        <a href="{{ url_for('reports') }}">Failure Reports</a>
-      </nav>
-    </header>
-
-    <main>
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          <ul class="flash-list">
-            {% for category, message in messages %}
-              <li class="flash {{ category }}">{{ message }}</li>
-            {% endfor %}
-          </ul>
-        {% endif %}
-      {% endwith %}
-      {% block content %}{% endblock %}
-    </main>
-  </body>
-</html>
+ <!doctype html>
+ <html lang="en">
+   <head>
+     <meta charset="utf-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1">
+     <title>MonitoringTool</title>
+     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+   </head>
+   <body>
+    <header class="topbar">
+      <div class="brand">
+        <div>
+          <p class="eyebrow">Monitoring Suite</p>
+          <h1>MonitoringTool</h1>
+        </div>
+        <span class="status-pill">System Status Dashboard</span>
+      </div>
+      <nav class="nav-links">
+         <a href="{{ url_for('configure') }}">Configure Processes</a>
+         <a href="{{ url_for('reports') }}">Failure Reports</a>
+       </nav>
+     </header>
+ 
+    <main class="page">
+       {% with messages = get_flashed_messages(with_categories=true) %}
+         {% if messages %}
+           <ul class="flash-list">
+             {% for category, message in messages %}
+               <li class="flash {{ category }}">{{ message }}</li>
+             {% endfor %}
+           </ul>
+         {% endif %}
+       {% endwith %}
+       {% block content %}{% endblock %}
+     </main>
+   </body>
+ </html>

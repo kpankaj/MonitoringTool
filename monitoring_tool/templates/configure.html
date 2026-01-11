@@ -1,64 +1,88 @@
-{% extends "base.html" %}
-
-{% block content %}
-<section class="panel">
-  <h2>Configure Processes</h2>
-  <form method="post" class="form-grid">
-    <label>
-      Tag Name
-      <input type="text" name="tag_name" placeholder="billing-job" required>
-    </label>
-    <label>
-      Folder Path
-      <input type="text" name="folder_path" placeholder="/var/monitoring/billing" required>
-    </label>
-    <button type="submit">Add Process</button>
-  </form>
-</section>
-
-<section class="panel">
-  <h2>Email Recipients</h2>
-  <form method="post" class="form-grid">
-    <label>
-      Email
-      <input type="email" name="email" placeholder="ops@example.com" required>
-    </label>
-    <button type="submit">Add Recipient</button>
-  </form>
-</section>
-
-<section class="panel">
-  <h2>Current Processes</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Tag</th>
-        <th>Folder</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for process in processes %}
-        <tr>
-          <td>{{ process.tag_name }}</td>
-          <td>{{ process.folder_path }}</td>
-        </tr>
-      {% else %}
-        <tr>
-          <td colspan="2">No processes configured.</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</section>
-
-<section class="panel">
-  <h2>Recipients</h2>
-  <ul class="pill-list">
-    {% for email in recipients %}
-      <li>{{ email }}</li>
-    {% else %}
-      <li>No recipients configured.</li>
-    {% endfor %}
-  </ul>
-</section>
-{% endblock %}
+ {% extends "base.html" %}
+ 
+ {% block content %}
+ <section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Workflow</p>
+      <h2>Configure Processes</h2>
+    </div>
+    <span class="helper-text">Track jobs and folders to monitor.</span>
+  </div>
+   <form method="post" class="form-grid">
+     <label>
+       Tag Name
+       <input type="text" name="tag_name" placeholder="billing-job" required>
+     </label>
+     <label>
+       Folder Path
+       <input type="text" name="folder_path" placeholder="/var/monitoring/billing" required>
+     </label>
+    <button type="submit" class="button primary">Add Process</button>
+   </form>
+ </section>
+ 
+ <section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Alerts</p>
+      <h2>Email Recipients</h2>
+    </div>
+    <span class="helper-text">Notify your on-call team.</span>
+  </div>
+   <form method="post" class="form-grid">
+     <label>
+       Email
+       <input type="email" name="email" placeholder="ops@example.com" required>
+     </label>
+    <button type="submit" class="button primary">Add Recipient</button>
+   </form>
+ </section>
+ 
+ <section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Inventory</p>
+      <h2>Current Processes</h2>
+    </div>
+    <span class="helper-text">Jobs actively monitored.</span>
+  </div>
+   <table>
+     <thead>
+       <tr>
+         <th>Tag</th>
+         <th>Folder</th>
+       </tr>
+     </thead>
+     <tbody>
+       {% for process in processes %}
+         <tr>
+           <td>{{ process.tag_name }}</td>
+           <td>{{ process.folder_path }}</td>
+         </tr>
+       {% else %}
+         <tr>
+           <td colspan="2">No processes configured.</td>
+         </tr>
+       {% endfor %}
+     </tbody>
+   </table>
+ </section>
+ 
+ <section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Distribution</p>
+      <h2>Recipients</h2>
+    </div>
+    <span class="helper-text">People who receive alerts.</span>
+  </div>
+   <ul class="pill-list">
+     {% for email in recipients %}
+       <li>{{ email }}</li>
+     {% else %}
+       <li>No recipients configured.</li>
+     {% endfor %}
+   </ul>
+ </section>
+ {% endblock %}
