@@ -5,20 +5,17 @@
   <div class="panel-header">
     <div>
       <p class="eyebrow">Workflow</p>
-      <h2>Configure Interfaces</h2>
+      <h2>Configure Tags</h2>
     </div>
-    <span class="helper-text">Track Interfaces and folders to monitor.</span>
+    <span class="helper-text">Track tags to monitor.</span>
   </div>
    <form method="post" class="form-grid">
      <label>
-       Interface Name
+       Tag Name
        <input type="text" name="tag_name" placeholder="billing-job" required>
      </label>
-     <label>
-       Folder Path
-       <input type="text" name="folder_path" placeholder="/var/monitoring/billing" required>
-     </label>
-    <button type="submit" class="button primary">Add Process</button>
+     
+    <button type="submit" class="button primary">Add Tag</button>
    </form>
  </section>
  
@@ -27,27 +24,32 @@
   <div class="panel-header">
     <div>
       <p class="eyebrow">Inventory</p>
-      <h2>Current Processes</h2>
+      <h2>Current Tags</h2>
     </div>
-    <span class="helper-text">Monitored Interfaces</span>
+    <span class="helper-text">Monitored Tags</span>
   </div>
    <table>
      <thead>
        <tr>
          <th>Tag</th>
-         <th>Folder</th>
+         <th>Actions</th>
        </tr>
      </thead>
      <tbody>
-       {% for process in processes %}
-         <tr>
-           <td>{{ process.tag_name }}</td>
-           <td>{{ process.folder_path }}</td>
+      {% for tag in tags %}
+      <tr>
+          <td>{{ tag }}</td>
+          <td>
+          <form method="post" action="{{ url_for('delete_tag') }}">
+            <input type="hidden" name="tag_name" value="{{ tag }}">
+            <button type="submit" class="button secondary">Remove</button>
+          </form>
+        </td>
          </tr>
        {% else %}
          <tr>
-           <td colspan="2">No Interface configured.</td>
-         </tr>
+          <td colspan="2">No tags configured.</td>
+        </tr>
        {% endfor %}
      </tbody>
    </table>

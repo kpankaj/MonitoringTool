@@ -52,3 +52,9 @@ def add_recipient(email: str) -> None:
 
 def remove_recipient(email: str) -> None:
     db.execute("DELETE FROM notification_recipients WHERE email = ?", [email])
+    
+    
+def remove_tag(tag_name: str) -> None:
+    db.execute("DELETE FROM processes WHERE tag_name = ?", [tag_name])
+
+

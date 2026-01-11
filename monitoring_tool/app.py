@@ -44,9 +44,9 @@ def create_app() -> Flask:
             if tag_name:
                 try:
                     process_service.add_tag(tag_name)
-                    flash(f"Added process {tag_name}.", "success")
+                    flash(f"Added tag {tag_name}.", "success")
                 except Exception as exc:  # noqa: BLE001
-                    flash(f"Failed to add process: {exc}", "error")
+                    flash(f"Failed to add tag: {exc}", "error")
 
             return redirect(url_for("configure"))
 
@@ -75,6 +75,15 @@ def create_app() -> Flask:
         tags = process_service.list_tags()
         folders = process_service.list_folder_configs()
         return render_template("folders.html", tags=tags, folders=folders)
+
+
+    @app.route("/configure/delete", methods=["POST"])
+    def delete_tag():
+        tag_name = request.form.get("tag_name", "").strip()
+        if tag_name:
+            process_service.remove_tag(tag_name)
+            flash(f"Removed tag {tag_name}.", "success")
+        return redirect(url_for("configure"))
 
     @app.route("/folders/delete", methods=["POST"])
     def delete_folder():
