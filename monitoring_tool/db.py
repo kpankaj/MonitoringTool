@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Iterable
 
 
-DB_PATH = Path(__file__).resolve().parent.parent / "monitoring.db"
+DB_PATH = '/Users/kpankaj_1/MonitoringTool/monitoring_tool.db'
 
 
 def get_connection() -> sqlite3.Connection:
@@ -19,7 +19,9 @@ def init_db() -> None:
 
 
 def _load_schema() -> str:
-    schema_path = Path(__file__).resolve().parent.parent / "scripts" / "schema.sql"
+    #schema_path = Path(__file__).resolve().parent.parent / "scripts" / "schema.sql"
+    schema_path = "/Users/kpankaj_1/MonitoringTool/monitoring_tool/scripts/schema.sql"
+    print(schema_path)
     return schema_path.read_text(encoding="utf-8")
 
 

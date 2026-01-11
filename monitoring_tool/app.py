@@ -90,6 +90,6 @@ def _format_failure_email(failed: list[dict]) -> str:
 
 
 if __name__ == "__main__":
-    db.init_db()
+    #db.init_db()
     app = create_app()
     app.run(host="0.0.0.0", port=5000, debug=True)
