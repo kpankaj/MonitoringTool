@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Alerts</p>
+      <h2>Send Failure Reminders Email</h2>
+    </div>
+    <span class="helper-text">Choose recipients and write a custom message.</span>
+  </div>
+  <form method="post" class="form-grid">
+    <div class="field-group">
+      <p class="field-label">To</p>
+      <div class="checkbox-grid">
+        {% for email in recipients %}
+        <label class="checkbox-item">
+          <input type="checkbox" name="recipients" value="{{ email }}" {% if email in selected_recipients %}checked{% endif %}>
+          <span>{{ email }}</span>
+        </label>
+        {% else %}
+        <p class="muted">No recipients configured.</p>
+        {% endfor %}
+      </div>
+    </div>
+    <label class="field-group">
+      Message
+      <textarea name="message" rows="6" placeholder="Add a custom message for the failure report." required>{{ message }}</textarea>
+    </label>
+    <div class="form-actions">
+      <a class="button" href="{{ url_for('reports') }}">Cancel</a>
+      <button type="submit" class="button primary">Send Email</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

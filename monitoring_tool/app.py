@@ -94,40 +94,75 @@ def create_app() -> Flask:
             flash(f"Removed folder for {tag_name}.", "success")
         return redirect(url_for("folders"))
 
-    @app.route("/reports", methods=["GET", "POST"])
+    @app.route("/reports", methods=["GET"])
     def reports():
         processes = process_service.list_processes()
         report_rows = report_service.list_process_reports(processes)
+        return render_template("reports.html", report_rows=report_rows)
+
+    @app.route("/reports/notify", methods=["GET", "POST"])
+    def notify_report():
+        processes = process_service.list_processes()
+        report_rows = report_service.list_process_reports(processes)
         failed = [row for row in report_rows if row["status"] == "Failed"]
-
-
+        recipients_list = process_service.list_recipients()
+        selected_recipients = recipients_list
+        message = ""
+        
         if request.method == "POST":
-            recipients = process_service.list_recipients()
-            if not recipients:
+            selected_recipients = request.form.getlist("recipients")
+            message = request.form.get("message", "").strip()
+
+            if not recipients_list:
                 flash("No recipients configured.", "error")
                 return redirect(url_for("reports"))
+                return redirect(url_for("notify_report"))
 
+            if not selected_recipients:
+                flash("Select at least one recipient.", "error")
+                return render_template(
+                    "notify_report.html",
+                    recipients=recipients_list,
+                    selected_recipients=selected_recipients,
+                    message=message,
+                )
+
+            if not message:
+                flash("Message is required.", "error")
+                return render_template(
+                    "notify_report.html",
+                    recipients=recipients_list,
+                    selected_recipients=selected_recipients,
+                    message=message,
+                )
+            
             smtp_host = os.getenv("SMTP_HOST", "localhost")
             smtp_port = int(os.getenv("SMTP_PORT", "25"))
             sender = os.getenv("SMTP_SENDER", "monitoring@example.com")
             subject = "MonitoringTool Failure Report"
-            body = _format_failure_email(failed)
+            body = f"{message}\n\n{_format_failure_email(failed)}"
 
             try:
                 email_service.send_failure_email(
                     smtp_host=smtp_host,
                     smtp_port=smtp_port,
                     sender=sender,
-                    recipients=recipients,
+                    recipients=selected_recipients,
                     subject=subject,
                     body=body,
                 )
                 flash("Notification email sent.", "success")
+                return redirect(url_for("reports"))
             except Exception as exc:  # noqa: BLE001
                 flash(f"Failed to send email: {exc}", "error")
 
 
-        return render_template("reports.html", report_rows=report_rows)
+        return render_template(
+            "notify_report.html",
+            recipients=recipients_list,
+            selected_recipients=selected_recipients,
+            message=message,
+        )
 
     return app
 
