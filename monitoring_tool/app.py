@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 
-from flask import Flask, redirect, render_template, request, flash, url_for
+from flask import Flask, redirect, render_template, request, flash, url_for, jsonify
 
 from monitoring_tool import db
 from monitoring_tool.services import email_service, monitoring_service, process_service, report_service
@@ -117,6 +117,15 @@ def create_app() -> Flask:
         processes = process_service.list_processes()
         report_rows = report_service.list_process_reports(processes)
         return render_template("reports.html", report_rows=report_rows)
+
+    @app.route("/reports/errors", methods=["GET"])
+    def report_errors():
+        tag_name = request.args.get("tag_name", "").strip()
+        if not tag_name:
+            return jsonify({"error": "tag_name is required"}), 400
+
+        fatal_events = report_service.list_fatal_events(tag_name)
+        return jsonify({"tag_name": tag_name, "fatal_events": fatal_events})
 
     @app.route("/reports/notify", methods=["GET", "POST"])
     def notify_report():
