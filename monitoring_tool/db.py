@@ -1,9 +1,10 @@
 import sqlite3
-from pathlib import Path
 from typing import Iterable
 
+from monitoring_tool import config
 
-DB_PATH = '/Users/kpankaj_1/MonitoringTool/monitoring_tool.db'
+DB_PATH = config.DB_PATH
+
 SCHEMA_STATEMENTS = """
 CREATE TABLE IF NOT EXISTS processes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,22 +41,15 @@ CREATE TABLE IF NOT EXISTS process_runs (
 
 
 def get_connection() -> sqlite3.Connection:
-    connection = sqlite3.connect(DB_PATH)
+    connection = sqlite3.connect(str(config.DB_PATH))
     connection.row_factory = sqlite3.Row
     return connection
 
 
 def init_db() -> None:
-    schema = _load_schema()
+    schema = config.SCHEMA_PATH.read_text(encoding="utf-8")
     with get_connection() as connection:
         connection.executescript(schema)
-
-
-def _load_schema() -> str:
-    #schema_path = Path(__file__).resolve().parent.parent / "scripts" / "schema.sql"
-    schema_path = "/Users/kpankaj_1/MonitoringTool/monitoring_tool/scripts/schema.sql"
-    print(schema_path)
-    return schema_path.read_text(encoding="utf-8")
 
 
 def query_all(query: str, params: Iterable | None = None) -> list[sqlite3.Row]:

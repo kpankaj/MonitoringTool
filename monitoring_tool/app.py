@@ -1,16 +1,14 @@
 from __future__ import annotations
 
-import os
-
 from flask import Flask, redirect, render_template, request, flash, url_for, jsonify
 
-from monitoring_tool import db
+from monitoring_tool import config, db
 from monitoring_tool.services import email_service, monitoring_service, process_service, report_service
 
 
 def create_app() -> Flask:
     app = Flask(__name__)
-    app.secret_key = os.getenv("FLASK_SECRET", "monitoring-tool-secret")
+    app.secret_key = config.FLASK_SECRET
     db.ensure_schema()
     monitoring_service.start_scheduler()
 
@@ -163,9 +161,9 @@ def create_app() -> Flask:
                     message=message,
                 )
             
-            smtp_host = os.getenv("SMTP_HOST", "localhost")
-            smtp_port = int(os.getenv("SMTP_PORT", "25"))
-            sender = os.getenv("SMTP_SENDER", "monitoring@example.com")
+            smtp_host = config.SMTP_HOST
+            smtp_port = config.SMTP_PORT
+            sender = config.SMTP_SENDER
             subject = "MonitoringTool Failure Report"
             body = f"{message}\n\n{_format_failure_email(failed)}"
 
