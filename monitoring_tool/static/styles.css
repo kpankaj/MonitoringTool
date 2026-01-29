@@ -294,6 +294,12 @@ th {
   border-color: #fecaca;
 }
 
+.status-pending {
+  background: #e0e7ff;
+  color: #3730a3;
+  border-color: #c7d2fe;
+}
+
 .flash-list {
   list-style: none;
   padding: 0;
@@ -507,6 +513,18 @@ textarea:focus {
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.code-snippet {
+  display: inline-block;
+  max-width: 320px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.85rem;
+  word-break: break-word;
 }
 
 

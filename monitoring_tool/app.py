@@ -5,12 +5,14 @@ import os
 from flask import Flask, redirect, render_template, request, flash, url_for
 
 from monitoring_tool import db
-from monitoring_tool.services import email_service, process_service, report_service
+from monitoring_tool.services import email_service, monitoring_service, process_service, report_service
 
 
 def create_app() -> Flask:
     app = Flask(__name__)
     app.secret_key = os.getenv("FLASK_SECRET", "monitoring-tool-secret")
+    db.ensure_schema()
+    monitoring_service.start_scheduler()
 
     @app.route("/")
     def index():
@@ -59,6 +61,8 @@ def create_app() -> Flask:
             tag_name = request.form.get("tag_name", "").strip()
             folder_path = request.form.get("folder_path", "").strip()
             check_uc4_file = request.form.get("check_uc4_file") == "on"
+            scheduled_time = request.form.get("scheduled_time", "").strip()
+            check_query = request.form.get("check_query", "").strip()
             existing_tags = set(process_service.list_tags())
 
             if not tag_name or not folder_path:
@@ -69,7 +73,21 @@ def create_app() -> Flask:
                 flash(f"Unknown tag {tag_name}. Add it on the Configure page first.", "error")
                 return redirect(url_for("folders"))
 
-            process_service.set_folder(tag_name, folder_path, check_uc4_file)
+            if scheduled_time and not check_query:
+                flash("A database query is required when scheduling a daily check time.", "error")
+                return redirect(url_for("folders"))
+
+            if check_query and not scheduled_time:
+                flash("A daily check time is required when providing a database query.", "error")
+                return redirect(url_for("folders"))
+
+            process_service.set_folder(
+                tag_name=tag_name,
+                folder_path=folder_path,
+                check_uc4_file=check_uc4_file,
+                scheduled_time=scheduled_time or None,
+                check_query=check_query or None,
+            )
             flash(f"Saved folder for {tag_name}.", "success")
             return redirect(url_for("folders"))
 

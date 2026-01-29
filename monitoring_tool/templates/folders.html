@@ -23,6 +23,16 @@
       Folder Path
       <input type="text" name="folder_path" placeholder="/archive" required>
     </label>
+    <label>
+      Daily Check Time (optional)
+      <input type="time" name="scheduled_time">
+      <span class="helper-text">Use with a database query to run once per day.</span>
+    </label>
+    <label>
+      Database Query (optional)
+      <textarea name="check_query" placeholder="SELECT 1 FROM monitoring_status WHERE interface = 'ABC';"></textarea>
+      <span class="helper-text">Only SELECT queries are supported.</span>
+    </label>
     <label class="checkbox-field">
       <input type="checkbox" name="check_uc4_file">
       Check UC4 File
@@ -44,6 +54,8 @@
       <tr>
         <th>Tag</th>
         <th>Folder</th>
+        <th>Daily Check Time</th>
+        <th>DB Query</th>
         <th>UC4 File Check</th>
         <th>Actions</th>
       </tr>
@@ -53,6 +65,14 @@
         <tr>
           <td>{{ folder.tag_name }}</td>
           <td>{{ folder.folder_path }}</td>
+          <td>{{ folder.scheduled_time or "Not scheduled" }}</td>
+          <td>
+            {% if folder.check_query %}
+              <span class="code-snippet">{{ folder.check_query }}</span>
+            {% else %}
+              <span class="muted">None</span>
+            {% endif %}
+          </td>
           <td>{{ "Enabled" if folder.check_uc4_file else "Not enabled" }}</td>
 
           <td>
@@ -64,7 +84,7 @@
         </tr>
       {% else %}
         <tr>
-          <td colspan="4">No folders configured.</td>
+          <td colspan="6">No folders configured.</td>
         </tr>
       {% endfor %}
     </tbody>

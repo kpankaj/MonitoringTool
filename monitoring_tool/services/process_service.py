@@ -3,7 +3,8 @@ from monitoring_tool import db
 
 def list_processes() -> list[dict]:
     rows = db.query_all(
-        "SELECT id, tag_name, folder_path, check_uc4_file FROM processes WHERE folder_path != '' ORDER BY tag_name"
+        "SELECT id, tag_name, folder_path, check_uc4_file, scheduled_time, check_query "
+        "FROM processes WHERE folder_path != '' ORDER BY tag_name"
     )
 
     return [dict(row) for row in rows]
@@ -24,21 +25,30 @@ def add_tag(tag_name: str) -> None:
 
 def list_folder_configs() -> list[dict]:
     rows = db.query_all(
-        "SELECT tag_name, folder_path, check_uc4_file FROM processes WHERE folder_path != '' ORDER BY tag_name"
+        "SELECT tag_name, folder_path, check_uc4_file, scheduled_time, check_query "
+        "FROM processes WHERE folder_path != '' ORDER BY tag_name"
     )
     return [dict(row) for row in rows]
 
 
-def set_folder(tag_name: str, folder_path: str, check_uc4_file: bool) -> None:
+def set_folder(
+    tag_name: str,
+    folder_path: str,
+    check_uc4_file: bool,
+    scheduled_time: str | None,
+    check_query: str | None,
+) -> None:
     db.execute(
-        "UPDATE processes SET folder_path = ?, check_uc4_file = ? WHERE tag_name = ?",
-        [folder_path, int(check_uc4_file), tag_name],
+        "UPDATE processes SET folder_path = ?, check_uc4_file = ?, scheduled_time = ?, check_query = ? "
+        "WHERE tag_name = ?",
+        [folder_path, int(check_uc4_file), scheduled_time, check_query, tag_name],
     )
 
 
 def clear_folder(tag_name: str) -> None:
     db.execute(
-        "UPDATE processes SET folder_path = '', check_uc4_file = 0 WHERE tag_name = ?",
+        "UPDATE processes SET folder_path = '', check_uc4_file = 0, scheduled_time = NULL, check_query = NULL "
+        "WHERE tag_name = ?",
         [tag_name],
     )
 
@@ -56,5 +66,4 @@ def remove_recipient(email: str) -> None:
     
 def remove_tag(tag_name: str) -> None:
     db.execute("DELETE FROM processes WHERE tag_name = ?", [tag_name])
-
 
