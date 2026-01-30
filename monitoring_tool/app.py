@@ -71,10 +71,6 @@ def create_app() -> Flask:
                 flash(f"Unknown tag {tag_name}. Add it on the Configure page first.", "error")
                 return redirect(url_for("folders"))
 
-            if scheduled_time and not check_query:
-                flash("A database query is required when scheduling a daily check time.", "error")
-                return redirect(url_for("folders"))
-
             if check_query and not scheduled_time:
                 flash("A daily check time is required when providing a database query.", "error")
                 return redirect(url_for("folders"))
