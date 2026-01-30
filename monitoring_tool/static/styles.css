@@ -156,6 +156,14 @@ input {
   transition: border 0.2s ease, box-shadow 0.2s ease;
 }
 
+.checkbox-field input[type="checkbox"] {
+  align-self: flex-start;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 4px;
+}
+
 select {
   padding: 0.7rem 0.9rem;
   border-radius: 12px;
