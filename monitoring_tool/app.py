@@ -125,6 +125,20 @@ def create_app() -> Flask:
         fatal_events = report_service.list_fatal_events(tag_name)
         return jsonify({"tag_name": tag_name, "fatal_events": fatal_events})
 
+    @app.route("/reports/interface", methods=["GET"])
+    def interface_failure():
+        tag_name = request.args.get("tag_name", "").strip()
+        if not tag_name:
+            flash("Select a failed interface to view its details.", "error")
+            return redirect(url_for("reports"))
+
+        fatal_events = report_service.list_fatal_events(tag_name)
+        return render_template(
+            "interface_failure.html",
+            tag_name=tag_name,
+            fatal_events=fatal_events,
+        )
+
     @app.route("/reports/notify", methods=["GET", "POST"])
     def notify_report():
         processes = process_service.list_processes()
