@@ -10,26 +10,6 @@
     </div>
     <a class="button primary" href="{{ url_for('notify_report') }}">Send Email Notifcation</a>
   </div>
-  <div class="report-card report-card--error-detail">
-    <div class="report-card-header">
-      <div>
-        <h3>Interface failure details</h3>
-        <p class="muted">Select an interface to view the most recent failure trace captured in the database.</p>
-      </div>
-      <div class="field">
-        <label for="interfaceSelect">Interface</label>
-        <select id="interfaceSelect" data-error-select>
-          <option value="">Select an interface</option>
-          {% for process in report_rows %}
-            <option value="{{ process.tag_name }}">{{ process.tag_name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    </div>
-    <div class="error-detail-body" data-error-details>
-      <p class="muted">Choose an interface to load its failure history.</p>
-    </div>
-  </div>
   {% if report_rows %}
   <div class="table-wrapper">
     <table data-report-table>
@@ -103,7 +83,17 @@
             <td>{{ process.uc4_status }}</td>
 
             <td>
-              <span class="status-badge {{ process.status_class }}">{{ process.status }}</span>
+              {% if process.status == "Failed" %}
+                <a
+                  class="status-badge {{ process.status_class }} status-link"
+                  href="{{ url_for('interface_failure', tag_name=process.tag_name) }}"
+                  role="button"
+                >
+                  {{ process.status }}
+                </a>
+              {% else %}
+                <span class="status-badge {{ process.status_class }}">{{ process.status }}</span>
+              {% endif %}
             </td>
           </tr>
         {% endfor %}
@@ -241,61 +231,5 @@
     renderPagination();
   }
 
-  const errorSelect = document.querySelector("[data-error-select]");
-  const errorDetails = document.querySelector("[data-error-details]");
-
-  const renderErrorDetails = (fatalEvents = []) => {
-    if (!errorDetails) {
-      return;
-    }
-    errorDetails.innerHTML = "";
-
-    if (!fatalEvents.length) {
-      const emptyState = document.createElement("p");
-      emptyState.className = "muted";
-      emptyState.textContent = "No failure events recorded for this interface.";
-      errorDetails.appendChild(emptyState);
-      return;
-    }
-
-    fatalEvents.forEach((event) => {
-      const wrapper = document.createElement("details");
-      wrapper.className = "error-detail";
-      wrapper.open = true;
-
-      const summary = document.createElement("summary");
-      summary.textContent = `${event.event_time} - Failure event`;
-      wrapper.appendChild(summary);
-
-      const description = document.createElement("pre");
-      description.className = "error-trace";
-      description.textContent = event.description;
-      wrapper.appendChild(description);
-
-      errorDetails.appendChild(wrapper);
-    });
-  };
-
-  if (errorSelect && errorDetails) {
-    errorSelect.addEventListener("change", async (event) => {
-      const tagName = event.target.value;
-      if (!tagName) {
-        errorDetails.innerHTML = '<p class="muted">Choose an interface to load its failure history.</p>';
-        return;
-      }
-
-      errorDetails.innerHTML = '<p class="muted">Loading failure details...</p>';
-      try {
-        const response = await fetch(`/reports/errors?tag_name=${encodeURIComponent(tagName)}`);
-        if (!response.ok) {
-          throw new Error("Failed to load error details.");
-        }
-        const payload = await response.json();
-        renderErrorDetails(payload.fatal_events || []);
-      } catch (error) {
-        errorDetails.innerHTML = '<p class="muted">Unable to load failure details right now.</p>';
-      }
-    });
-  }
  </script>
 {% endblock %}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">MAMS</p>
+      <h2>Interface Failure Details</h2>
+      <p class="muted">Showing failure events for {{ tag_name }}.</p>
+    </div>
+    <a class="button" href="{{ url_for('reports') }}">Back to Failure Reports</a>
+  </div>
+  <div class="report-card report-card--error-detail">
+    <div class="report-card-header">
+      <div>
+        <h3>{{ tag_name }}</h3>
+        <p class="muted">Most recent failure traces captured in the database.</p>
+      </div>
+    </div>
+    <div class="error-detail-body">
+      {% if fatal_events %}
+        {% for event in fatal_events %}
+          <details class="error-detail" open>
+            <summary>{{ event.event_time }} - Failure event</summary>
+            <pre class="error-trace">{{ event.description }}</pre>
+          </details>
+        {% endfor %}
+      {% else %}
+        <p class="muted">No failure events recorded for this interface.</p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}
