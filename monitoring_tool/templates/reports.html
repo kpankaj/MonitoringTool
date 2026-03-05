@@ -8,7 +8,12 @@
       <p class="eyebrow">MAMS</p>
       <h2>Mointored Interfaces</h2>
     </div>
-    <a class="button primary" href="{{ url_for('notify_report') }}">Send Email Notifcation</a>
+    <div class="header-actions">
+      <form method="post" action="{{ url_for('run_all_checks') }}">
+        <button class="button secondary" type="submit">Run All Checks</button>
+      </form>
+      <a class="button primary" href="{{ url_for('notify_report') }}">Send Email Notifcation</a>
+    </div>
   </div>
   {% if report_rows %}
   <div class="table-wrapper">

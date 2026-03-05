@@ -95,6 +95,32 @@ class MonitoringServiceTests(unittest.TestCase):
 
         record_run.assert_not_called()
 
+    def test_scheduled_check_force_run_ignores_time_gate(self) -> None:
+        process = {
+            "tag_name": "job-force",
+            "scheduled_time": "23:59",
+            "check_query": "select 1",
+            "folder_path": "/tmp",
+        }
+        now = datetime(2024, 1, 1, 10, 0, 0)
+
+        with patch(
+            "monitoring_tool.services.monitoring_service.process_service.list_processes",
+            return_value=[process],
+        ), patch(
+            "monitoring_tool.services.monitoring_service.query_service.evaluate_query",
+            return_value=query_service.QueryCheckResult(False, None),
+        ), patch(
+            "monitoring_tool.services.monitoring_service.report_service.record_run"
+        ) as record_run:
+            monitoring_service.run_monitoring_cycle(now=now, force_run=True)
+
+        record_run.assert_called_once()
+        args = record_run.call_args.kwargs
+        self.assertEqual(args["tag_name"], "job-force")
+        self.assertEqual(args["status"], "Success")
+        self.assertEqual(args["check_type"], "db_query")
+
     def test_filesystem_check_with_missing_folder_skips_uc4(self) -> None:
         process = {
             "tag_name": "job-e",

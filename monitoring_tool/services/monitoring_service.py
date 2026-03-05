@@ -26,7 +26,7 @@ def _run_scheduler(interval_seconds: int) -> None:
         _stop_event.wait(interval_seconds)
 
 
-def run_monitoring_cycle(now: datetime | None = None) -> None:
+def run_monitoring_cycle(now: datetime | None = None, force_run: bool = False) -> None:
     current_time = now or datetime.now()
     processes = process_service.list_processes()
     for process in processes:
@@ -44,7 +44,7 @@ def run_monitoring_cycle(now: datetime | None = None) -> None:
                 )
                 continue
 
-            if not _should_run_scheduled_check(tag_name, scheduled_time, current_time):
+            if not force_run and not _should_run_scheduled_check(tag_name, scheduled_time, current_time):
                 continue
 
             query_result = query_service.evaluate_query(check_query)
