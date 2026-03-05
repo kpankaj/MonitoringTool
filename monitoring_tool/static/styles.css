@@ -213,6 +213,30 @@ button:hover {
   box-shadow: 0 16px 30px rgba(37, 99, 235, 0.3);
 }
 
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.header-actions form {
+  margin: 0;
+}
+
+.button.secondary,
+button.secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+  box-shadow: none;
+}
+
+.button.secondary:hover,
+button.secondary:hover {
+  box-shadow: none;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

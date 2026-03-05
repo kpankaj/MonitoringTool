@@ -112,6 +112,12 @@ def create_app() -> Flask:
         report_rows = report_service.list_process_reports(processes)
         return render_template("reports.html", report_rows=report_rows)
 
+    @app.route("/reports/run-checks", methods=["POST"])
+    def run_all_checks():
+        monitoring_service.run_monitoring_cycle(force_run=True)
+        flash("All configured process checks completed. Report refreshed with latest statuses.", "success")
+        return redirect(url_for("reports"))
+
     @app.route("/reports/errors", methods=["GET"])
     def report_errors():
         tag_name = request.args.get("tag_name", "").strip()
