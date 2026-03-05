@@ -34,38 +34,14 @@ def run_monitoring_cycle(now: datetime | None = None, force_run: bool = False) -
         scheduled_time = (process.get("scheduled_time") or "").strip()
         check_query = (process.get("check_query") or "").strip()
 
-        if scheduled_time:
-            if not check_query:
-                _record_failed_run(
-                    tag_name,
-                    ["Scheduled time set without a database query"],
-                    check_type="db_query",
-                    run_time=current_time,
-                )
-                continue
+        should_run_query = bool(check_query)
+        if should_run_query and scheduled_time and not force_run:
+            should_run_query = _should_run_scheduled_check(tag_name, scheduled_time, current_time)
 
-            if not force_run and not _should_run_scheduled_check(tag_name, scheduled_time, current_time):
-                continue
-
-            query_result = query_service.evaluate_query(check_query)
-            reasons = []
-            if query_result.is_failed:
-                reasons.append(query_result.reason or "Database query check failed")
-            status = "Failed" if reasons else "Success"
-            report_service.record_run(
-                tag_name=tag_name,
-                status=status,
-                reasons=reasons,
-                uc4_status="Not applicable",
-                check_type="db_query",
-                run_time=_format_run_time(current_time),
-            )
-            continue
-
-        _run_filesystem_check(process, current_time)
+        _run_filesystem_check(process, current_time, check_query if should_run_query else None)
 
 
-def _run_filesystem_check(process: dict, current_time: datetime) -> None:
+def _run_filesystem_check(process: dict, current_time: datetime, check_query: str | None = None) -> None:
     tag_name = process["tag_name"]
     file_check = filesystem_service.evaluate_folder(process["folder_path"])
     uc4_check_enabled = bool(process.get("check_uc4_file"))
@@ -83,6 +59,11 @@ def _run_filesystem_check(process: dict, current_time: datetime) -> None:
         reasons.append(file_check.reason or "Filesystem check failed")
     if uc4_check_enabled and uc4_check and uc4_check.is_failed:
         reasons.append(uc4_check.reason or "UC4 file check failed")
+
+    if check_query:
+        query_result = query_service.evaluate_query(check_query)
+        if query_result.is_failed:
+            reasons.append(query_result.reason or "Database query check failed")
 
     if not uc4_check_enabled:
         uc4_status = "Not enabled"
@@ -108,12 +89,6 @@ def _should_run_scheduled_check(tag_name: str, scheduled_time: str, now: datetim
     try:
         scheduled = datetime.strptime(scheduled_time, "%H:%M").time()
     except ValueError:
-        _record_failed_run(
-            tag_name,
-            [f"Invalid scheduled time format: {scheduled_time}"],
-            check_type="db_query",
-            run_time=now,
-        )
         return False
 
     if now.time() < scheduled:
@@ -127,18 +102,6 @@ def _should_run_scheduled_check(tag_name: str, scheduled_time: str, now: datetim
 
     return True
 
-
-def _record_failed_run(
-    tag_name: str, reasons: list[str], check_type: str, run_time: datetime
-) -> None:
-    report_service.record_run(
-        tag_name=tag_name,
-        status="Failed",
-        reasons=reasons,
-        uc4_status="Not applicable",
-        check_type=check_type,
-        run_time=_format_run_time(run_time),
-    )
 
 
 def _format_run_time(current_time: datetime) -> str:

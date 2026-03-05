@@ -27,6 +27,14 @@
       Daily Check Time (optional)
       <input type="time" name="scheduled_time">
     </label>
+    <label>
+      SQL Failure Check Query (optional)
+      <textarea
+        name="check_query"
+        rows="4"
+        placeholder="SELECT * FROM failure_events WHERE status = 'FAILED'"
+      ></textarea>
+    </label>
     <label class="checkbox-field">
       <span>UC4 Check</span>
       <input type="checkbox" name="check_uc4_file">
