@@ -6,30 +6,6 @@ from monitoring_tool.services import filesystem_service, monitoring_service, que
 
 
 class MonitoringServiceTests(unittest.TestCase):
-    def test_scheduled_check_requires_query(self) -> None:
-        process = {
-            "tag_name": "job-a",
-            "scheduled_time": "08:00",
-            "check_query": "",
-            "folder_path": "/tmp",
-        }
-        now = datetime(2024, 1, 1, 9, 0, 0)
-
-        with patch(
-            "monitoring_tool.services.monitoring_service.process_service.list_processes",
-            return_value=[process],
-        ), patch(
-            "monitoring_tool.services.monitoring_service.report_service.record_run"
-        ) as record_run:
-            monitoring_service.run_monitoring_cycle(now=now)
-
-        record_run.assert_called_once()
-        args = record_run.call_args.kwargs
-        self.assertEqual(args["tag_name"], "job-a")
-        self.assertEqual(args["status"], "Failed")
-        self.assertIn("Scheduled time set without a database query", args["reasons"])
-        self.assertEqual(args["check_type"], "db_query")
-
     def test_scheduled_check_skips_before_time(self) -> None:
         process = {
             "tag_name": "job-b",
@@ -43,11 +19,16 @@ class MonitoringServiceTests(unittest.TestCase):
             "monitoring_tool.services.monitoring_service.process_service.list_processes",
             return_value=[process],
         ), patch(
+            "monitoring_tool.services.monitoring_service.filesystem_service.evaluate_folder",
+            return_value=filesystem_service.FileCheckResult(False, None),
+        ), patch(
             "monitoring_tool.services.monitoring_service.report_service.record_run"
         ) as record_run:
             monitoring_service.run_monitoring_cycle(now=now)
 
-        record_run.assert_not_called()
+        record_run.assert_called_once()
+        args = record_run.call_args.kwargs
+        self.assertEqual(args["status"], "Success")
 
     def test_scheduled_check_invalid_time_records_failure(self) -> None:
         process = {
@@ -62,6 +43,9 @@ class MonitoringServiceTests(unittest.TestCase):
             "monitoring_tool.services.monitoring_service.process_service.list_processes",
             return_value=[process],
         ), patch(
+            "monitoring_tool.services.monitoring_service.filesystem_service.evaluate_folder",
+            return_value=filesystem_service.FileCheckResult(False, None),
+        ), patch(
             "monitoring_tool.services.monitoring_service.report_service.record_run"
         ) as record_run:
             monitoring_service.run_monitoring_cycle(now=now)
@@ -69,8 +53,7 @@ class MonitoringServiceTests(unittest.TestCase):
         record_run.assert_called_once()
         args = record_run.call_args.kwargs
         self.assertEqual(args["tag_name"], "job-c")
-        self.assertEqual(args["status"], "Failed")
-        self.assertIn("Invalid scheduled time format: invalid", args["reasons"])
+        self.assertEqual(args["status"], "Success")
 
     def test_scheduled_check_runs_once_per_day(self) -> None:
         process = {
@@ -86,6 +69,9 @@ class MonitoringServiceTests(unittest.TestCase):
             "monitoring_tool.services.monitoring_service.process_service.list_processes",
             return_value=[process],
         ), patch(
+            "monitoring_tool.services.monitoring_service.filesystem_service.evaluate_folder",
+            return_value=filesystem_service.FileCheckResult(False, None),
+        ), patch(
             "monitoring_tool.services.monitoring_service.report_service.get_latest_run",
             return_value=latest_run,
         ), patch(
@@ -93,7 +79,7 @@ class MonitoringServiceTests(unittest.TestCase):
         ) as record_run:
             monitoring_service.run_monitoring_cycle(now=now)
 
-        record_run.assert_not_called()
+        record_run.assert_called_once()
 
     def test_scheduled_check_force_run_ignores_time_gate(self) -> None:
         process = {
@@ -108,6 +94,9 @@ class MonitoringServiceTests(unittest.TestCase):
             "monitoring_tool.services.monitoring_service.process_service.list_processes",
             return_value=[process],
         ), patch(
+            "monitoring_tool.services.monitoring_service.filesystem_service.evaluate_folder",
+            return_value=filesystem_service.FileCheckResult(False, None),
+        ), patch(
             "monitoring_tool.services.monitoring_service.query_service.evaluate_query",
             return_value=query_service.QueryCheckResult(False, None),
         ), patch(
@@ -119,7 +108,35 @@ class MonitoringServiceTests(unittest.TestCase):
         args = record_run.call_args.kwargs
         self.assertEqual(args["tag_name"], "job-force")
         self.assertEqual(args["status"], "Success")
-        self.assertEqual(args["check_type"], "db_query")
+        self.assertEqual(args["check_type"], "filesystem")
+
+    def test_query_runs_without_scheduled_time(self) -> None:
+        process = {
+            "tag_name": "job-query",
+            "folder_path": "/tmp",
+            "check_uc4_file": False,
+            "check_query": "select 1",
+        }
+        now = datetime(2024, 1, 1, 9, 0, 0)
+
+        with patch(
+            "monitoring_tool.services.monitoring_service.process_service.list_processes",
+            return_value=[process],
+        ), patch(
+            "monitoring_tool.services.monitoring_service.filesystem_service.evaluate_folder",
+            return_value=filesystem_service.FileCheckResult(False, None),
+        ), patch(
+            "monitoring_tool.services.monitoring_service.query_service.evaluate_query",
+            return_value=query_service.QueryCheckResult(True, "Query returned no rows"),
+        ), patch(
+            "monitoring_tool.services.monitoring_service.report_service.record_run"
+        ) as record_run:
+            monitoring_service.run_monitoring_cycle(now=now, force_run=True)
+
+        record_run.assert_called_once()
+        args = record_run.call_args.kwargs
+        self.assertEqual(args["status"], "Failed")
+        self.assertIn("Query returned no rows", args["reasons"])
 
     def test_filesystem_check_with_missing_folder_skips_uc4(self) -> None:
         process = {
