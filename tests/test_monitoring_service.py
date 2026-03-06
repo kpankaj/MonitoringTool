@@ -231,7 +231,7 @@ class QueryServiceTests(unittest.TestCase):
         self.assertEqual(result.reason, "Missing query for scheduled check")
 
     def test_query_error_propagates(self) -> None:
-        with patch(
+        with patch("monitoring_tool.services.query_service.config.SQLSERVER_CONNECTION_STRING", ""), patch(
             "monitoring_tool.services.query_service.db.query_all",
             side_effect=RuntimeError("boom"),
         ):
@@ -241,18 +241,29 @@ class QueryServiceTests(unittest.TestCase):
         self.assertEqual(result.reason, "Query failed: boom")
 
     def test_query_no_rows_fails(self) -> None:
-        with patch("monitoring_tool.services.query_service.db.query_all", return_value=[]):
+        with patch("monitoring_tool.services.query_service.config.SQLSERVER_CONNECTION_STRING", ""), patch("monitoring_tool.services.query_service.db.query_all", return_value=[]):
             result = query_service.evaluate_query("select 1")
 
         self.assertTrue(result.is_failed)
         self.assertEqual(result.reason, "Query returned no rows")
 
     def test_query_with_rows_succeeds(self) -> None:
-        with patch("monitoring_tool.services.query_service.db.query_all", return_value=[{"id": 1}]):
+        with patch("monitoring_tool.services.query_service.config.SQLSERVER_CONNECTION_STRING", ""), patch("monitoring_tool.services.query_service.db.query_all", return_value=[{"id": 1}]):
             result = query_service.evaluate_query("select 1")
 
         self.assertFalse(result.is_failed)
         self.assertIsNone(result.reason)
+
+    def test_query_uses_sqlserver_when_configured(self) -> None:
+        with patch("monitoring_tool.services.query_service.config.SQLSERVER_CONNECTION_STRING", "Driver=mock"), patch(
+            "monitoring_tool.services.query_service._query_sqlserver",
+            return_value=[{"id": 1}],
+        ) as query_sqlserver, patch("monitoring_tool.services.query_service.db.query_all") as sqlite_query:
+            result = query_service.evaluate_query("select 1")
+
+        self.assertFalse(result.is_failed)
+        query_sqlserver.assert_called_once_with("select 1")
+        sqlite_query.assert_not_called()
 
 
 if __name__ == "__main__":

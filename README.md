@@ -36,6 +36,19 @@ export SMTP_SENDER=monitoring@example.com
 
 Recipients can be managed from the Configure page.
 
+### SQL Server Query Checks
+Optional queries from **Configure Folder Paths** can be executed against a SQL Server database for check validation.
+
+Set these environment variables to enable SQL Server execution:
+
+```bash
+export MONITORING_SQLSERVER_CONNECTION_STRING="DRIVER={ODBC Driver 18 for SQL Server};SERVER=tcp:sql-host,1433;DATABASE=Monitoring;UID=user;PWD=pass;Encrypt=yes;TrustServerCertificate=yes"
+export MONITORING_SQLSERVER_QUERY_TIMEOUT_SECONDS=30
+```
+
+If `MONITORING_SQLSERVER_CONNECTION_STRING` is not set, query checks run against the local SQLite monitoring database.
+
+
 ## Scripts
 - `python scripts/init_db.py` initializes the SQLite database.
 - `python scripts/seed_db.py` adds sample fatal events for testing.
