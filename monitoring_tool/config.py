@@ -15,3 +15,7 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", "25"))
 SMTP_SENDER = os.getenv("SMTP_SENDER", "monitoring@example.com")
 
 FLASK_SECRET = os.getenv("FLASK_SECRET", "monitoring-tool-secret")
+
+# Optional SQL Server connection used by scheduled check queries.
+SQLSERVER_CONNECTION_STRING = os.getenv("MONITORING_SQLSERVER_CONNECTION_STRING", "").strip()
+SQLSERVER_QUERY_TIMEOUT_SECONDS = int(os.getenv("MONITORING_SQLSERVER_QUERY_TIMEOUT_SECONDS", "30"))
