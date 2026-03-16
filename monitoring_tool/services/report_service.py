@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import json
+import logging
 
 from monitoring_tool import db
 
+logger = logging.getLogger(__name__)
+
 
 def list_fatal_events(tag_name: str) -> list[dict]:
+    logger.debug("Listing fatal events for %s", tag_name)
     rows = db.query_all(
         "SELECT event_time, description FROM fatal_events WHERE tag_name = ? ORDER BY event_time DESC",
         [tag_name],
@@ -14,6 +18,7 @@ def list_fatal_events(tag_name: str) -> list[dict]:
 
 
 def list_process_reports(processes: list[dict]) -> list[dict]:
+    logger.debug("Building process reports for %s process(es)", len(processes))
     reports = []
     latest_runs = _list_latest_runs()
 
@@ -71,6 +76,7 @@ def record_run(
     check_type: str,
     run_time: str | None = None,
 ) -> None:
+    logger.info("Persisting run for %s with status %s", tag_name, status)
     serialized_reasons = json.dumps(reasons)
     if run_time is None:
         db.execute(
