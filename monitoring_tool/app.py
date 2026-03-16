@@ -1,19 +1,30 @@
 from __future__ import annotations
 
+import logging
+
 from flask import Flask, redirect, render_template, request, flash, url_for, jsonify
 
 from monitoring_tool import config, db
+from monitoring_tool.logging_setup import configure_logging
 from monitoring_tool.services import email_service, monitoring_service, process_service, report_service
 
 
+logger = logging.getLogger(__name__)
+
+
 def create_app() -> Flask:
+    configure_logging()
+    logger.info("Creating Flask application")
     app = Flask(__name__)
     app.secret_key = config.FLASK_SECRET
     db.ensure_schema()
+    logger.info("Database schema ensured")
     monitoring_service.start_scheduler()
+    logger.info("Monitoring scheduler started")
 
     @app.route("/")
     def index():
+        logger.debug("Index route accessed; redirecting to reports")
         return redirect(url_for("reports"))
 
     @app.route("/recipients", methods=["GET", "POST"])
@@ -21,6 +32,7 @@ def create_app() -> Flask:
         if request.method == "POST":
             email = request.form.get("email", "").strip()
             if email:
+                logger.info("Adding recipient %s", email)
                 process_service.add_recipient(email)
                 flash(f"Added recipient {email}.", "success")
             return redirect(url_for("recipients"))
@@ -32,6 +44,7 @@ def create_app() -> Flask:
     def delete_recipient():
         email = request.form.get("email", "").strip()
         if email:
+            logger.info("Removing recipient %s", email)
             process_service.remove_recipient(email)
             flash(f"Removed recipient {email}.", "success")
         return redirect(url_for("recipients"))
@@ -43,9 +56,11 @@ def create_app() -> Flask:
 
             if tag_name:
                 try:
+                    logger.info("Adding tag %s", tag_name)
                     process_service.add_tag(tag_name)
                     flash(f"Added tag {tag_name}.", "success")
                 except Exception as exc:  # noqa: BLE001
+                    logger.exception("Failed to add tag %s", tag_name)
                     flash(f"Failed to add tag: {exc}", "error")
 
             return redirect(url_for("configure"))
@@ -71,6 +86,7 @@ def create_app() -> Flask:
                 flash(f"Unknown tag {tag_name}. Add it on the Configure page first.", "error")
                 return redirect(url_for("folders"))
 
+            logger.info("Saving folder config for tag %s", tag_name)
             process_service.set_folder(
                 tag_name=tag_name,
                 folder_path=folder_path,
@@ -90,6 +106,7 @@ def create_app() -> Flask:
     def delete_tag():
         tag_name = request.form.get("tag_name", "").strip()
         if tag_name:
+            logger.info("Removing tag %s", tag_name)
             process_service.remove_tag(tag_name)
             flash(f"Removed tag {tag_name}.", "success")
         return redirect(url_for("configure"))
@@ -98,6 +115,7 @@ def create_app() -> Flask:
     def delete_folder():
         tag_name = request.form.get("tag_name", "").strip()
         if tag_name:
+            logger.info("Clearing folder config for tag %s", tag_name)
             process_service.clear_folder(tag_name)
             flash(f"Removed folder for {tag_name}.", "success")
         return redirect(url_for("folders"))
@@ -110,6 +128,7 @@ def create_app() -> Flask:
 
     @app.route("/reports/run-checks", methods=["POST"])
     def run_all_checks():
+        logger.info("Manual run checks requested")
         monitoring_service.run_monitoring_cycle(force_run=True)
         flash("All configured process checks completed. Report refreshed with latest statuses.", "success")
         return redirect(url_for("reports"))
@@ -120,6 +139,7 @@ def create_app() -> Flask:
         if not tag_name:
             return jsonify({"error": "tag_name is required"}), 400
 
+        logger.debug("Fetching fatal events for %s", tag_name)
         fatal_events = report_service.list_fatal_events(tag_name)
         return jsonify({"tag_name": tag_name, "fatal_events": fatal_events})
 
@@ -130,6 +150,7 @@ def create_app() -> Flask:
             flash("Select a failed interface to view its details.", "error")
             return redirect(url_for("reports"))
 
+        logger.debug("Fetching fatal events for %s", tag_name)
         fatal_events = report_service.list_fatal_events(tag_name)
         return render_template(
             "interface_failure.html",
@@ -180,6 +201,7 @@ def create_app() -> Flask:
             body = f"{message}\n\n{_format_failure_email(failed)}"
 
             try:
+                logger.info("Sending notification email to %s recipient(s)", len(selected_recipients))
                 email_service.send_failure_email(
                     smtp_host=smtp_host,
                     smtp_port=smtp_port,
@@ -191,6 +213,7 @@ def create_app() -> Flask:
                 flash("Notification email sent.", "success")
                 return redirect(url_for("reports"))
             except Exception as exc:  # noqa: BLE001
+                logger.exception("Failed to send notification email")
                 flash(f"Failed to send email: {exc}", "error")
 
 
@@ -220,4 +243,5 @@ def _format_failure_email(failed: list[dict]) -> str:
 if __name__ == "__main__":
     #db.init_db()
     app = create_app()
+    logger.info("Starting Flask development server")
     app.run(host="0.0.0.0", port=5000, debug=True)

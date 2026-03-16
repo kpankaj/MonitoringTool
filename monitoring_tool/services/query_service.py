@@ -1,6 +1,9 @@
+import logging
 from dataclasses import dataclass
 
 from monitoring_tool import config, db
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -10,6 +13,7 @@ class QueryCheckResult:
 
 
 def evaluate_query(query: str) -> QueryCheckResult:
+    logger.debug("Evaluating query health check")
     normalized = query.strip()
     if not normalized:
         return QueryCheckResult(True, "Missing query for scheduled check")
@@ -20,6 +24,7 @@ def evaluate_query(query: str) -> QueryCheckResult:
     try:
         rows = _run_query(normalized)
     except Exception as exc:  # noqa: BLE001
+        logger.exception("Query execution failed")
         return QueryCheckResult(True, f"Query failed: {exc}")
 
     if not rows:
@@ -29,6 +34,7 @@ def evaluate_query(query: str) -> QueryCheckResult:
 
 
 def _run_query(query: str):
+    logger.debug("Running query using %s", "SQL Server" if config.SQLSERVER_CONNECTION_STRING else "SQLite")
     if config.SQLSERVER_CONNECTION_STRING:
         return _query_sqlserver(query)
 

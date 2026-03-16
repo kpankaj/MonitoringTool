@@ -1,6 +1,9 @@
+import logging
 import smtplib
 from email.message import EmailMessage
 from typing import Iterable
+
+logger = logging.getLogger(__name__)
 
 
 def send_failure_email(
@@ -11,9 +14,11 @@ def send_failure_email(
     subject: str,
     body: str,
 ) -> None:
+    recipients_list = list(recipients)
+    logger.info("Sending failure email to %s recipient(s) via %s:%s", len(recipients_list), smtp_host, smtp_port)
     message = EmailMessage()
     message["From"] = sender
-    message["To"] = ", ".join(recipients)
+    message["To"] = ", ".join(recipients_list)
     message["Subject"] = subject
     message.set_content(body)
 

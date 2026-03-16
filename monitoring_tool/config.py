@@ -19,3 +19,6 @@ FLASK_SECRET = os.getenv("FLASK_SECRET", "monitoring-tool-secret")
 # Optional SQL Server connection used by scheduled check queries.
 SQLSERVER_CONNECTION_STRING = os.getenv("MONITORING_SQLSERVER_CONNECTION_STRING", "").strip()
 SQLSERVER_QUERY_TIMEOUT_SECONDS = int(os.getenv("MONITORING_SQLSERVER_QUERY_TIMEOUT_SECONDS", "30"))
+
+LOG_PATH = Path(os.getenv("MONITORING_LOG_PATH", Path.cwd() / "monitoring_tool.log"))
+LOG_LEVEL = os.getenv("MONITORING_LOG_LEVEL", "INFO").upper()

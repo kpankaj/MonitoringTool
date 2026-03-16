@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
 import threading
 from datetime import datetime
 
 from monitoring_tool.services import filesystem_service, process_service, query_service, report_service
+
+logger = logging.getLogger(__name__)
 
 _scheduler_thread: threading.Thread | None = None
 _stop_event = threading.Event()
@@ -12,24 +15,29 @@ _stop_event = threading.Event()
 def start_scheduler(interval_seconds: int = 600) -> None:
     global _scheduler_thread
     if _scheduler_thread and _scheduler_thread.is_alive():
+        logger.debug("Scheduler thread already running")
         return
 
     _scheduler_thread = threading.Thread(
         target=_run_scheduler, args=(interval_seconds,), daemon=True
     )
     _scheduler_thread.start()
+    logger.info("Scheduler started with interval %s seconds", interval_seconds)
 
 
 def _run_scheduler(interval_seconds: int) -> None:
     while not _stop_event.is_set():
+        logger.debug("Running scheduled monitoring cycle")
         run_monitoring_cycle()
         _stop_event.wait(interval_seconds)
 
 
 def run_monitoring_cycle(now: datetime | None = None, force_run: bool = False) -> None:
+    logger.info("Starting monitoring cycle (force_run=%s)", force_run)
     current_time = now or datetime.now()
     processes = process_service.list_processes()
     for process in processes:
+        logger.debug("Evaluating process %s", process["tag_name"])
         tag_name = process["tag_name"]
         scheduled_time = (process.get("scheduled_time") or "").strip()
         check_query = (process.get("check_query") or "").strip()
@@ -42,6 +50,7 @@ def run_monitoring_cycle(now: datetime | None = None, force_run: bool = False) -
 
 
 def _run_filesystem_check(process: dict, current_time: datetime, check_query: str | None = None) -> None:
+    logger.debug("Running filesystem check for %s", process["tag_name"])
     tag_name = process["tag_name"]
     file_check = filesystem_service.evaluate_folder(process["folder_path"])
     uc4_check_enabled = bool(process.get("check_uc4_file"))
@@ -75,6 +84,7 @@ def _run_filesystem_check(process: dict, current_time: datetime, check_query: st
         uc4_status = "OK"
 
     status = "Failed" if reasons else "Success"
+    logger.info("Recording run result for %s with status %s", tag_name, status)
     report_service.record_run(
         tag_name=tag_name,
         status=status,
@@ -89,6 +99,7 @@ def _should_run_scheduled_check(tag_name: str, scheduled_time: str, now: datetim
     try:
         scheduled = datetime.strptime(scheduled_time, "%H:%M").time()
     except ValueError:
+        logger.warning("Invalid scheduled_time for tag %s: %s", tag_name, scheduled_time)
         return False
 
     if now.time() < scheduled:

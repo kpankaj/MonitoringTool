@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -5,6 +6,8 @@ from pathlib import Path
 SUCCESS_MARKER = "success.flag"
 FAILURE_MARKER = "failure.flag"
 UC4_MARKER = "uc4.flag"
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -14,6 +17,7 @@ class FileCheckResult:
 
 
 def evaluate_folder(folder_path: str) -> FileCheckResult:
+    logger.debug("Checking folder path %s", folder_path)
     folder = Path(folder_path)
     if not folder.exists():
         return FileCheckResult(True, f"Folder missing: {folder_path}")
@@ -29,6 +33,7 @@ def evaluate_folder(folder_path: str) -> FileCheckResult:
     return FileCheckResult(False, None)
 
 def evaluate_uc4_file(folder_path: str) -> FileCheckResult:
+    logger.debug("Checking UC4 file in folder %s", folder_path)
     folder = Path(folder_path)
     if not folder.exists():
         return FileCheckResult(True, f"Folder missing: {folder_path}")

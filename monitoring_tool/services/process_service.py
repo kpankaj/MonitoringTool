@@ -1,7 +1,12 @@
+import logging
+
 from monitoring_tool import db
+
+logger = logging.getLogger(__name__)
 
 
 def list_processes() -> list[dict]:
+    logger.debug("Listing configured processes")
     rows = db.query_all(
         "SELECT id, tag_name, folder_path, check_uc4_file, scheduled_time, check_query "
         "FROM processes WHERE folder_path != '' ORDER BY tag_name"
@@ -17,6 +22,7 @@ def list_tags() -> list[str]:
 
 
 def add_tag(tag_name: str) -> None:
+    logger.info("Adding process tag %s", tag_name)
     db.execute(
         "INSERT INTO processes (tag_name, folder_path, check_uc4_file) VALUES (?, '', 0)",
         [tag_name],
@@ -38,6 +44,7 @@ def set_folder(
     scheduled_time: str | None,
     check_query: str | None,
 ) -> None:
+    logger.info("Updating folder for tag %s to %s", tag_name, folder_path)
     db.execute(
         "UPDATE processes SET folder_path = ?, check_uc4_file = ?, scheduled_time = ?, check_query = ? "
         "WHERE tag_name = ?",
@@ -46,6 +53,7 @@ def set_folder(
 
 
 def clear_folder(tag_name: str) -> None:
+    logger.info("Clearing folder configuration for tag %s", tag_name)
     db.execute(
         "UPDATE processes SET folder_path = '', check_uc4_file = 0, scheduled_time = NULL, check_query = NULL "
         "WHERE tag_name = ?",
@@ -58,12 +66,15 @@ def list_recipients() -> list[str]:
 
 
 def add_recipient(email: str) -> None:
+    logger.info("Adding recipient %s", email)
     db.execute("INSERT OR IGNORE INTO notification_recipients (email) VALUES (?)", [email])
 
 def remove_recipient(email: str) -> None:
+    logger.info("Removing recipient %s", email)
     db.execute("DELETE FROM notification_recipients WHERE email = ?", [email])
     
     
 def remove_tag(tag_name: str) -> None:
+    logger.info("Removing process tag %s", tag_name)
     db.execute("DELETE FROM processes WHERE tag_name = ?", [tag_name])
 
