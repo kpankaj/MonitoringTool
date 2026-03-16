@@ -90,6 +90,7 @@ def create_app() -> Flask:
     @app.route("/folders", methods=["GET", "POST"])
     def folders():
         if request.method == "POST":
+            editing_tag = request.form.get("editing_tag", "").strip()
             tag_name = request.form.get("tag_name", "").strip()
             folder_path = request.form.get("folder_path", "").strip()
             check_uc4_file = request.form.get("check_uc4_file") == "on"
@@ -113,12 +114,15 @@ def create_app() -> Flask:
                 scheduled_time=scheduled_time or None,
                 check_query=check_query or None,
             )
-            flash(f"Saved folder for {tag_name}.", "success")
+            message_prefix = "Updated" if editing_tag else "Saved"
+            flash(f"{message_prefix} folder for {tag_name}.", "success")
             return redirect(url_for("folders"))
 
         tags = process_service.list_tags()
         folders = process_service.list_folder_configs()
-        return render_template("folders.html", tags=tags, folders=folders)
+        edit_tag = request.args.get("edit_tag", "").strip()
+        edit_folder = next((folder for folder in folders if folder["tag_name"] == edit_tag), None)
+        return render_template("folders.html", tags=tags, folders=folders, edit_folder=edit_folder)
 
 
     @app.route("/configure/delete", methods=["POST"])
