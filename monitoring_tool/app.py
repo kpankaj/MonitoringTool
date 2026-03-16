@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 
 from flask import Flask, redirect, render_template, request, flash, url_for, jsonify
+from werkzeug.exceptions import HTTPException
 
 from monitoring_tool import config, db
 from monitoring_tool.logging_setup import configure_logging
@@ -10,6 +11,22 @@ from monitoring_tool.services import email_service, monitoring_service, process_
 
 
 logger = logging.getLogger(__name__)
+
+
+def _render_error_page(message: str, status_code: int = 500):
+    return render_template("error.html", message=message), status_code
+
+
+def _register_error_handlers(app: Flask) -> None:
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(exc: HTTPException):
+        logger.exception("HTTP error encountered: %s", exc)
+        return _render_error_page(exc.description or "An unexpected error occurred.", status_code=exc.code or 500)
+
+    @app.errorhandler(Exception)
+    def handle_unexpected_exception(exc: Exception):
+        logger.exception("Unhandled exception encountered")
+        return _render_error_page("An unexpected error occurred. Please contact support.", status_code=500)
 
 
 def create_app() -> Flask:
@@ -21,6 +38,8 @@ def create_app() -> Flask:
     logger.info("Database schema ensured")
     monitoring_service.start_scheduler()
     logger.info("Monitoring scheduler started")
+
+    _register_error_handlers(app)
 
     @app.route("/")
     def index():
