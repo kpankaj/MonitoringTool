@@ -94,6 +94,7 @@ def create_app() -> Flask:
             tag_name = request.form.get("tag_name", "").strip()
             folder_path = request.form.get("folder_path", "").strip()
             check_uc4_file = request.form.get("check_uc4_file") == "on"
+            uc4_folder_path = request.form.get("uc4_folder_path", "").strip()
             scheduled_time = request.form.get("scheduled_time", "").strip()
             check_query = request.form.get("check_query", "").strip()
             existing_tags = set(process_service.list_tags())
@@ -106,11 +107,16 @@ def create_app() -> Flask:
                 flash(f"Unknown tag {tag_name}. Add it on the Configure page first.", "error")
                 return redirect(url_for("folders"))
 
+            if check_uc4_file and not uc4_folder_path:
+                flash("UC4 folder path is required when UC4 check is enabled.", "error")
+                return redirect(url_for("folders"))
+
             logger.info("Saving folder config for tag %s", tag_name)
             process_service.set_folder(
                 tag_name=tag_name,
                 folder_path=folder_path,
                 check_uc4_file=check_uc4_file,
+                uc4_folder_path=uc4_folder_path or None,
                 scheduled_time=scheduled_time or None,
                 check_query=check_query or None,
             )

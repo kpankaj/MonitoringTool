@@ -62,13 +62,23 @@ def _run_filesystem_check(process: dict, current_time: datetime, check_query: st
     file_check = filesystem_service.evaluate_folder(process["folder_path"])
     uc4_check_enabled = bool(process.get("check_uc4_file"))
     uc4_check = None
-    uc4_folder_missing = (
+    uc4_folder_path = (process.get("uc4_folder_path") or process["folder_path"]).strip()
+    base_folder_missing = (
         file_check.is_failed
         and file_check.reason
         and file_check.reason.startswith("Folder missing:")
     )
-    if uc4_check_enabled and not uc4_folder_missing:
-        uc4_check = filesystem_service.evaluate_uc4_file(process["folder_path"])
+    uc4_folder_missing = False
+    if uc4_check_enabled:
+        if uc4_folder_path == process["folder_path"] and base_folder_missing:
+            uc4_folder_missing = True
+        else:
+            uc4_check = filesystem_service.evaluate_uc4_file(uc4_folder_path)
+            uc4_folder_missing = (
+                uc4_check.is_failed
+                and uc4_check.reason
+                and uc4_check.reason.startswith("Folder missing:")
+            )
 
     reasons = []
     if file_check.is_failed:
