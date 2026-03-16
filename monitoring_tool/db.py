@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS processes (
     tag_name TEXT NOT NULL UNIQUE,
     folder_path TEXT NOT NULL,
     check_uc4_file INTEGER NOT NULL DEFAULT 0,
+    uc4_folder_path TEXT,
     scheduled_time TEXT,
     check_query TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -74,6 +75,7 @@ def ensure_schema() -> None:
     logger.info("Ensuring database schema and required columns")
     with get_connection() as connection:
         connection.executescript(SCHEMA_STATEMENTS)
+        _ensure_column(connection, "processes", "uc4_folder_path", "TEXT")
         _ensure_column(connection, "processes", "scheduled_time", "TEXT")
         _ensure_column(connection, "processes", "check_query", "TEXT")
 

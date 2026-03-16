@@ -140,6 +140,16 @@ body {
   align-items: end;
 }
 
+
+.two-column-form {
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+}
+
+.two-column-form .full-width,
+.two-column-form .action-row {
+  grid-column: 1 / -1;
+}
+
 .form-grid label {
   display: flex;
   flex-direction: column;

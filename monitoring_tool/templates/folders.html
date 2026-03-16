@@ -9,7 +9,7 @@
     </div>
     <span class="helper-text">{{ "Update an existing interface folder configuration." if edit_folder else "Assign folder paths to existing interfaces." }}</span>
   </div>
-  <form method="post" class="form-grid">
+  <form method="post" class="form-grid two-column-form">
     <input type="hidden" name="editing_tag" value="{{ edit_folder.tag_name if edit_folder else "" }}">
     <label>
       Interface Name
@@ -25,10 +25,14 @@
       <input type="text" name="folder_path" placeholder="/archive" value="{{ edit_folder.folder_path if edit_folder else "" }}" required>
     </label>
     <label>
+      UC4 Folder Path (optional unless UC4 Check is enabled)
+      <input type="text" name="uc4_folder_path" placeholder="/uc4-triggers" value="{{ edit_folder.uc4_folder_path if edit_folder and edit_folder.uc4_folder_path else "" }}">
+    </label>
+    <label>
       Daily Check Time (optional)
       <input type="time" name="scheduled_time" value="{{ edit_folder.scheduled_time if edit_folder and edit_folder.scheduled_time else "" }}">
     </label>
-    <label>
+    <label class="full-width">
       SQL Failure Check Query (optional)
       <textarea
         name="check_query"
@@ -64,6 +68,7 @@
         <th>Folder</th>
         <th>Daily Check Time</th>
         <th>DB Query</th>
+        <th>UC4 Folder</th>
         <th>UC4 File Check</th>
         <th>Actions</th>
       </tr>
@@ -81,6 +86,7 @@
               <span class="muted">None</span>
             {% endif %}
           </td>
+          <td>{{ folder.uc4_folder_path or "—" }}</td>
           <td>{{ "Enabled" if folder.check_uc4_file else "Not enabled" }}</td>
 
           <td>
@@ -95,7 +101,7 @@
         </tr>
       {% else %}
         <tr>
-          <td colspan="6">No folders configured.</td>
+          <td colspan="7">No folders configured.</td>
         </tr>
       {% endfor %}
     </tbody>
