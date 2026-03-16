@@ -646,6 +646,21 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
+
+.uc4-config-row {
+  display: grid;
+  grid-template-columns: auto minmax(260px, 1fr);
+  gap: 1rem;
+  align-items: end;
+}
+
+.uc4-config-row .checkbox-field {
+  align-self: end;
+}
+
+.uc4-path-field {
+  min-width: 0;
+}
 .code-snippet {
   display: inline-block;
   max-width: 320px;
@@ -668,5 +683,10 @@ textarea:focus {
   .panel-header {
     align-items: flex-start;
    }
+
+
+  .uc4-config-row {
+    grid-template-columns: 1fr;
+  }
 }
    

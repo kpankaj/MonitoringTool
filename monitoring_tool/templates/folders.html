@@ -25,10 +25,6 @@
       <input type="text" name="folder_path" placeholder="/archive" value="{{ edit_folder.folder_path if edit_folder else "" }}" required>
     </label>
     <label>
-      UC4 Folder Path (optional unless UC4 Check is enabled)
-      <input type="text" name="uc4_folder_path" placeholder="/uc4-triggers" value="{{ edit_folder.uc4_folder_path if edit_folder and edit_folder.uc4_folder_path else "" }}">
-    </label>
-    <label>
       Daily Check Time (optional)
       <input type="time" name="scheduled_time" value="{{ edit_folder.scheduled_time if edit_folder and edit_folder.scheduled_time else "" }}">
     </label>
@@ -40,10 +36,16 @@
         placeholder="SELECT * FROM failure_events WHERE status = 'FAILED'"
       >{{ edit_folder.check_query if edit_folder and edit_folder.check_query else "" }}</textarea>
     </label>
-    <label class="checkbox-field">
-      <span>UC4 Check</span>
-      <input type="checkbox" name="check_uc4_file" {{ "checked" if edit_folder and edit_folder.check_uc4_file else "" }}>
-    </label>
+    <div class="full-width uc4-config-row">
+      <label class="checkbox-field">
+        <span>UC4 Check</span>
+        <input type="checkbox" name="check_uc4_file" {{ "checked" if edit_folder and edit_folder.check_uc4_file else "" }}>
+      </label>
+      <label class="uc4-path-field">
+        UC4 Folder Path (optional unless UC4 Check is enabled)
+        <input type="text" name="uc4_folder_path" placeholder="/uc4-triggers" value="{{ edit_folder.uc4_folder_path if edit_folder and edit_folder.uc4_folder_path else "" }}">
+      </label>
+    </div>
     <div class="action-row">
       <button type="submit" class="button primary">{{ "Update Folder Location" if edit_folder else "Save Folder Location" }}</button>
       {% if edit_folder %}
