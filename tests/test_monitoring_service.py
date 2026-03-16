@@ -173,7 +173,7 @@ class MonitoringServiceTests(unittest.TestCase):
         }
         now = datetime(2024, 1, 1, 9, 0, 0)
         folder_result = filesystem_service.FileCheckResult(False, None)
-        uc4_result = filesystem_service.FileCheckResult(True, "Missing UC4 file: uc4.flag")
+        uc4_result = filesystem_service.FileCheckResult(True, "Missing UC4 trigger file containing: _trigger_20240101.xml")
 
         with patch(
             "monitoring_tool.services.monitoring_service.process_service.list_processes",
@@ -191,8 +191,8 @@ class MonitoringServiceTests(unittest.TestCase):
 
         args = record_run.call_args.kwargs
         self.assertEqual(args["status"], "Failed")
-        self.assertIn("Missing UC4 file: uc4.flag", args["reasons"])
-        self.assertEqual(args["uc4_status"], "Missing UC4 file: uc4.flag")
+        self.assertIn("Missing UC4 trigger file containing: _trigger_20240101.xml", args["reasons"])
+        self.assertEqual(args["uc4_status"], "Missing UC4 trigger file containing: _trigger_20240101.xml")
 
     def test_filesystem_check_success_without_uc4(self) -> None:
         process = {
