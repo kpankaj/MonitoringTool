@@ -5,27 +5,28 @@
   <div class="panel-header">
     <div>
       <p class="eyebrow"></p>
-      <h2>Configure Folder Paths</h2>
+      <h2>{{ "Edit Folder Configuration" if edit_folder else "Configure Folder Paths" }}</h2>
     </div>
-    <span class="helper-text">Assign folder paths to existing interfaces.</span>
+    <span class="helper-text">{{ "Update an existing interface folder configuration." if edit_folder else "Assign folder paths to existing interfaces." }}</span>
   </div>
   <form method="post" class="form-grid">
+    <input type="hidden" name="editing_tag" value="{{ edit_folder.tag_name if edit_folder else "" }}">
     <label>
       Interface Name
       <select name="tag_name" required>
-        <option value="" disabled selected>Select an interface</option>
+        <option value="" disabled {{ "selected" if not edit_folder else "" }}>Select an interface</option>
         {% for tag in tags %}
-          <option value="{{ tag }}">{{ tag }}</option>
+          <option value="{{ tag }}" {{ "selected" if edit_folder and edit_folder.tag_name == tag else "" }}>{{ tag }}</option>
         {% endfor %}
       </select>
     </label>
     <label>
       Folder Path
-      <input type="text" name="folder_path" placeholder="/archive" required>
+      <input type="text" name="folder_path" placeholder="/archive" value="{{ edit_folder.folder_path if edit_folder else "" }}" required>
     </label>
     <label>
       Daily Check Time (optional)
-      <input type="time" name="scheduled_time">
+      <input type="time" name="scheduled_time" value="{{ edit_folder.scheduled_time if edit_folder and edit_folder.scheduled_time else "" }}">
     </label>
     <label>
       SQL Failure Check Query (optional)
@@ -33,13 +34,18 @@
         name="check_query"
         rows="4"
         placeholder="SELECT * FROM failure_events WHERE status = 'FAILED'"
-      ></textarea>
+      >{{ edit_folder.check_query if edit_folder and edit_folder.check_query else "" }}</textarea>
     </label>
     <label class="checkbox-field">
       <span>UC4 Check</span>
-      <input type="checkbox" name="check_uc4_file">
+      <input type="checkbox" name="check_uc4_file" {{ "checked" if edit_folder and edit_folder.check_uc4_file else "" }}>
     </label>
-    <button type="submit" class="button primary">Save Folder Location</button>
+    <div class="action-row">
+      <button type="submit" class="button primary">{{ "Update Folder Location" if edit_folder else "Save Folder Location" }}</button>
+      {% if edit_folder %}
+        <a class="button secondary" href="{{ url_for('folders') }}">Cancel</a>
+      {% endif %}
+    </div>
   </form>
 </section>
 
@@ -78,10 +84,13 @@
           <td>{{ "Enabled" if folder.check_uc4_file else "Not enabled" }}</td>
 
           <td>
-            <form method="post" action="{{ url_for('delete_folder') }}">
-              <input type="hidden" name="tag_name" value="{{ folder.tag_name }}">
-              <button type="submit" class="button ghost">Remove</button>
-            </form>
+            <div class="row-actions">
+              <a class="button secondary" href="{{ url_for('folders', edit_tag=folder.tag_name) }}">Edit</a>
+              <form method="post" action="{{ url_for('delete_folder') }}">
+                <input type="hidden" name="tag_name" value="{{ folder.tag_name }}">
+                <button type="submit" class="button ghost">Remove</button>
+              </form>
+            </div>
           </td>
         </tr>
       {% else %}

@@ -601,6 +601,24 @@ th {
   gap: 0.75rem;
 }
 
+.action-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.row-actions form {
+  margin: 0;
+}
+
 textarea {
   padding: 0.7rem 0.9rem;
   border-radius: 12px;
