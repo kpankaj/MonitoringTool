@@ -1,11 +1,8 @@
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
-
-SUCCESS_MARKER = "success.flag"
-FAILURE_MARKER = "failure.flag"
-UC4_MARKER = "uc4.flag"
 
 logger = logging.getLogger(__name__)
 
@@ -22,15 +19,11 @@ def evaluate_folder(folder_path: str) -> FileCheckResult:
     if not folder.exists():
         return FileCheckResult(True, f"Folder missing: {folder_path}")
 
-    failure_file = folder / FAILURE_MARKER
-    if failure_file.exists():
-        return FileCheckResult(True, f"Failure marker found: {failure_file.name}")
-
-    success_file = folder / SUCCESS_MARKER
-    if not success_file.exists():
-        return FileCheckResult(True, f"Missing success marker: {success_file.name}")
+    if any(folder.iterdir()):
+        return FileCheckResult(True, "Folder is not empty")
 
     return FileCheckResult(False, None)
+
 
 def evaluate_uc4_file(folder_path: str) -> FileCheckResult:
     logger.debug("Checking UC4 file in folder %s", folder_path)
@@ -38,9 +31,13 @@ def evaluate_uc4_file(folder_path: str) -> FileCheckResult:
     if not folder.exists():
         return FileCheckResult(True, f"Folder missing: {folder_path}")
 
-    uc4_file = folder / UC4_MARKER
-    if not uc4_file.exists():
-        return FileCheckResult(True, f"Missing UC4 file: {uc4_file.name}")
+    current_date = datetime.now().strftime("%Y%m%d")
+    expected_pattern = f"_trigger_{current_date}.xml"
+    has_expected_file = any(
+        child.is_file() and expected_pattern in child.name
+        for child in folder.iterdir()
+    )
+    if not has_expected_file:
+        return FileCheckResult(True, f"Missing UC4 trigger file containing: {expected_pattern}")
 
     return FileCheckResult(False, None)
-
