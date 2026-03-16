@@ -17,6 +17,14 @@ def list_fatal_events(tag_name: str) -> list[dict]:
     return [dict(row) for row in rows]
 
 
+def record_fatal_event(tag_name: str, description: str) -> None:
+    logger.error("Recording fatal event for %s: %s", tag_name, description)
+    db.execute(
+        "INSERT INTO fatal_events (tag_name, description) VALUES (?, ?)",
+        [tag_name, description],
+    )
+
+
 def list_process_reports(processes: list[dict]) -> list[dict]:
     logger.debug("Building process reports for %s process(es)", len(processes))
     reports = []

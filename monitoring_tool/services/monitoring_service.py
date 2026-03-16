@@ -28,7 +28,10 @@ def start_scheduler(interval_seconds: int = 600) -> None:
 def _run_scheduler(interval_seconds: int) -> None:
     while not _stop_event.is_set():
         logger.debug("Running scheduled monitoring cycle")
-        run_monitoring_cycle()
+        try:
+            run_monitoring_cycle()
+        except Exception:  # noqa: BLE001
+            logger.exception("Monitoring scheduler cycle failed")
         _stop_event.wait(interval_seconds)
 
 
@@ -37,16 +40,20 @@ def run_monitoring_cycle(now: datetime | None = None, force_run: bool = False) -
     current_time = now or datetime.now()
     processes = process_service.list_processes()
     for process in processes:
-        logger.debug("Evaluating process %s", process["tag_name"])
-        tag_name = process["tag_name"]
-        scheduled_time = (process.get("scheduled_time") or "").strip()
-        check_query = (process.get("check_query") or "").strip()
+        tag_name = process.get("tag_name", "unknown")
+        logger.debug("Evaluating process %s", tag_name)
+        try:
+            scheduled_time = (process.get("scheduled_time") or "").strip()
+            check_query = (process.get("check_query") or "").strip()
 
-        should_run_query = bool(check_query)
-        if should_run_query and scheduled_time and not force_run:
-            should_run_query = _should_run_scheduled_check(tag_name, scheduled_time, current_time)
+            should_run_query = bool(check_query)
+            if should_run_query and scheduled_time and not force_run:
+                should_run_query = _should_run_scheduled_check(tag_name, scheduled_time, current_time)
 
-        _run_filesystem_check(process, current_time, check_query if should_run_query else None)
+            _run_filesystem_check(process, current_time, check_query if should_run_query else None)
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Monitoring cycle failed for %s", tag_name)
+            report_service.record_fatal_event(tag_name, f"Unexpected monitoring error: {exc}")
 
 
 def _run_filesystem_check(process: dict, current_time: datetime, check_query: str | None = None) -> None:
