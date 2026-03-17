@@ -32,9 +32,9 @@ def evaluate_uc4_file(folder_path: str) -> FileCheckResult:
         return FileCheckResult(True, f"Folder missing: {folder_path}")
 
     current_date = datetime.now().strftime("%Y%m%d")
-    expected_pattern = f"_trigger_{current_date}.xml"
+    expected_pattern = f"_trigger_{current_date}"
     has_expected_file = any(
-        child.is_file() and expected_pattern in child.name
+        child.is_file() and child.suffix == ".xml" and expected_pattern in child.stem
         for child in folder.iterdir()
     )
     if not has_expected_file:
