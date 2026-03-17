@@ -12,6 +12,14 @@
       <form method="post" action="{{ url_for('run_all_checks') }}" data-run-all-checks-form>
         <button class="button secondary" type="submit" data-run-all-checks-button>Run All Checks</button>
       </form>
+      <div class="run-check-progress" data-run-check-progress hidden>
+        <img
+          class="run-check-progress-gif"
+          src="data:image/gif;base64,R0lGODlhIAAgAPQAAP///8zMzJmZmWZmZjMzMwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCQAAACwAAAAAIAAgAAAFvCAgjmRpnmiqrmzrvnAsz3Rt33iu73zvwHJYQJIKh8Si8YhMJoNQqPRaLQqHxKJxWLxqNBqPRqPVaDR6vQ6n0+n8foPA4HA4HBYLh8PhcDgcDofD4XA4nU6n0+n8QAOw=="
+          alt="Loading indicator"
+        />
+        <span class="muted">Running Checks in the background...</span>
+      </div>
       <p class="muted run-check-status" data-run-check-status aria-live="polite"></p>
       <a class="button primary" href="{{ url_for('notify_report') }}">Send Email Notifcation</a>
     </div>
@@ -119,6 +127,7 @@
   const runChecksForm = document.querySelector("[data-run-all-checks-form]");
   const runChecksButton = document.querySelector("[data-run-all-checks-button]");
   const runChecksStatus = document.querySelector("[data-run-check-status]");
+  const runCheckProgress = document.querySelector("[data-run-check-progress]");
 
   const setRunChecksState = (isRunning, message = "") => {
     if (!runChecksButton || !runChecksStatus) {
@@ -127,7 +136,10 @@
 
     runChecksButton.disabled = isRunning;
     runChecksButton.classList.toggle("is-loading", isRunning);
-    runChecksButton.textContent = isRunning ? "Running checks..." : "Run All Checks";
+    runChecksButton.textContent = isRunning ? "Running Checks..." : "Run All Checks";
+    if (runCheckProgress) {
+      runCheckProgress.hidden = !isRunning;
+    }
     runChecksStatus.textContent = message;
   };
 
@@ -288,7 +300,7 @@
     if (runChecksForm) {
       runChecksForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        setRunChecksState(true, "Running checks in the background...");
+        setRunChecksState(true, "Running Checks in the background...");
 
         try {
           const response = await fetch(runChecksForm.action, {

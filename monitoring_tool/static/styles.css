@@ -248,6 +248,19 @@ button.secondary:hover {
 }
 
 
+
+.run-check-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.run-check-progress-gif {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+}
+
 .run-check-status {
   min-height: 1.25rem;
   margin: 0;
