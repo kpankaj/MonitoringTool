@@ -17,6 +17,8 @@ SMTP_SENDER = os.getenv("SMTP_SENDER", "monitoring@example.com")
 FLASK_SECRET = os.getenv("FLASK_SECRET", "monitoring-tool-secret")
 
 # Optional SQL Server connection used by scheduled check queries.
+# Example:
+# DRIVER={ODBC Driver 18 for SQL Server};SERVER=tcp:sql-host,1433;DATABASE=Monitoring;UID=user;PWD=pass;Encrypt=yes;TrustServerCertificate=yes
 SQLSERVER_CONNECTION_STRING = os.getenv("MONITORING_SQLSERVER_CONNECTION_STRING", "").strip()
 SQLSERVER_QUERY_TIMEOUT_SECONDS = int(os.getenv("MONITORING_SQLSERVER_QUERY_TIMEOUT_SECONDS", "30"))
 
