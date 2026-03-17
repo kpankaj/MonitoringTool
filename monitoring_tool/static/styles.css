@@ -253,6 +253,20 @@ table {
   font-size: 0.95rem;
 }
 
+
+.monitored-folders-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.monitored-folders-table .path-column {
+  width: 220px;
+  max-width: 220px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+}
+
 th,
 td {
   text-align: left;

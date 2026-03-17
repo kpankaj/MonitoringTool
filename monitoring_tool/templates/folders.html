@@ -63,14 +63,14 @@
     </div>
     <span class="helper-text">Monitored Folders List</span>
   </div>
-  <table>
+  <table class="monitored-folders-table">
     <thead>
       <tr>
         <th>Tag</th>
-        <th>Folder</th>
+        <th class="path-column">Folder</th>
         <th>Daily Check Time</th>
         <th>DB Query</th>
-        <th>UC4 Folder</th>
+        <th class="path-column">UC4 Folder</th>
         <th>UC4 File Check</th>
         <th>Actions</th>
       </tr>
@@ -79,7 +79,7 @@
       {% for folder in folders %}
         <tr>
           <td>{{ folder.tag_name }}</td>
-          <td>{{ folder.folder_path }}</td>
+          <td class="path-column">{{ folder.folder_path }}</td>
           <td>{{ folder.scheduled_time or "Not scheduled" }}</td>
           <td>
             {% if folder.check_query %}
@@ -88,7 +88,7 @@
               <span class="muted">None</span>
             {% endif %}
           </td>
-          <td>{{ folder.uc4_folder_path or "—" }}</td>
+          <td class="path-column">{{ folder.uc4_folder_path or "—" }}</td>
           <td>{{ "Enabled" if folder.check_uc4_file else "Not enabled" }}</td>
 
           <td>
