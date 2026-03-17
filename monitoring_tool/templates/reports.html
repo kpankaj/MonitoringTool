@@ -9,9 +9,10 @@
       <h2>Monitored Interfaces</h2>
     </div>
     <div class="header-actions">
-      <form method="post" action="{{ url_for('run_all_checks') }}">
-        <button class="button secondary" type="submit">Run All Checks</button>
+      <form method="post" action="{{ url_for('run_all_checks') }}" data-run-all-checks-form>
+        <button class="button secondary" type="submit" data-run-all-checks-button>Run All Checks</button>
       </form>
+      <p class="muted run-check-status" data-run-check-status aria-live="polite"></p>
       <a class="button primary" href="{{ url_for('notify_report') }}">Send Email Notifcation</a>
     </div>
   </div>
@@ -115,6 +116,20 @@
  </section>
  <script>
   const reportTable = document.querySelector("[data-report-table]");
+  const runChecksForm = document.querySelector("[data-run-all-checks-form]");
+  const runChecksButton = document.querySelector("[data-run-all-checks-button]");
+  const runChecksStatus = document.querySelector("[data-run-check-status]");
+
+  const setRunChecksState = (isRunning, message = "") => {
+    if (!runChecksButton || !runChecksStatus) {
+      return;
+    }
+
+    runChecksButton.disabled = isRunning;
+    runChecksButton.classList.toggle("is-loading", isRunning);
+    runChecksButton.textContent = isRunning ? "Running checks..." : "Run All Checks";
+    runChecksStatus.textContent = message;
+  };
 
   if (reportTable) {
     const tbody = reportTable.querySelector("tbody");
@@ -217,6 +232,44 @@
       }
     };
 
+    const renderReportRows = (reportRows) => {
+      if (!Array.isArray(reportRows)) {
+        return;
+      }
+
+      tbody.innerHTML = reportRows.map((process) => {
+        const reasons = Array.isArray(process.reasons) ? process.reasons : [];
+        const fatalEvents = Array.isArray(process.fatal_events) ? process.fatal_events : [];
+        const reasonsMarkup = reasons.length
+          ? `<ul>${reasons.map((reason) => `<li>${reason}</li>`).join("")}</ul>`
+          : '<span class="muted">No issues</span>';
+        const fatalEventsMarkup = fatalEvents.length
+          ? `<ul>${fatalEvents.map((event) => `<li>${event.event_time} - ${event.description}</li>`).join("")}</ul>`
+          : '<span class="muted">None</span>';
+        const statusMarkup = process.status === "Failed"
+          ? `<a class="status-badge ${process.status_class} status-link" href="/reports/interface?tag_name=${encodeURIComponent(process.tag_name)}" role="button">${process.status}</a>`
+          : `<span class="status-badge ${process.status_class}">${process.status}</span>`;
+
+        return `<tr>
+          <td>${process.tag_name ?? ""}</td>
+          <td>${process.folder_path ?? ""}</td>
+          <td>${reasonsMarkup}</td>
+          <td>${fatalEventsMarkup}</td>
+          <td>${process.uc4_status ?? ""}</td>
+          <td>${statusMarkup}</td>
+        </tr>`;
+      }).join("");
+
+      rows.splice(0, rows.length, ...Array.from(tbody.querySelectorAll("tr")));
+
+      if (sortIndex !== null) {
+        applySort();
+        updateSortIndicators();
+      }
+      currentPage = 1;
+      renderPagination();
+    };
+
     sortButtons.forEach((button) => {
       button.addEventListener("click", () => {
         const newIndex = Number(button.dataset.sortIndex);
@@ -232,9 +285,35 @@
       });
     });
 
+    if (runChecksForm) {
+      runChecksForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        setRunChecksState(true, "Running checks in the background...");
+
+        try {
+          const response = await fetch(runChecksForm.action, {
+            method: "POST",
+            headers: {
+              "X-Requested-With": "XMLHttpRequest",
+              "Accept": "application/json"
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+          renderReportRows(data.report_rows);
+          setRunChecksState(false, data.message || "Checks completed.");
+        } catch (error) {
+          setRunChecksState(false, "Unable to run checks right now. Please retry.");
+        }
+      });
+    }
+
     updateSortIndicators();
     renderPagination();
   }
-
- </script>
+</script>
 {% endblock %}
