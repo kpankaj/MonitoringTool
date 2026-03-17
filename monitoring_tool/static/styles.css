@@ -247,6 +247,19 @@ button.secondary:hover {
   box-shadow: none;
 }
 
+
+.run-check-status {
+  min-height: 1.25rem;
+  margin: 0;
+}
+
+button.is-loading,
+button.is-loading:hover {
+  cursor: wait;
+  opacity: 0.8;
+  transform: none;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

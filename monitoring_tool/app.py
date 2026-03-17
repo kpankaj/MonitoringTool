@@ -159,7 +159,18 @@ def create_app() -> Flask:
     def run_all_checks():
         logger.info("Manual run checks requested")
         monitoring_service.run_monitoring_cycle(force_run=True)
-        flash("All configured process checks completed. Report refreshed with latest statuses.", "success")
+        success_message = "All configured process checks completed. Report refreshed with latest statuses."
+
+        expects_json = (
+            request.headers.get("X-Requested-With") == "XMLHttpRequest"
+            or request.accept_mimetypes.best == "application/json"
+        )
+        if expects_json:
+            processes = process_service.list_processes()
+            report_rows = report_service.list_process_reports(processes)
+            return jsonify({"message": success_message, "report_rows": report_rows})
+
+        flash(success_message, "success")
         return redirect(url_for("reports"))
 
     @app.route("/reports/errors", methods=["GET"])
