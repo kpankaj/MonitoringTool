@@ -53,19 +53,29 @@ def _query_sqlserver(query: str):
         return cursor.fetchmany(1)
 
 
-def list_log_event_details(tag_name: str) -> list[dict]:
-    logger.debug("Fetching log event details for %s", tag_name)
+def list_log_event_details(tag_name: str | None = None, severity: str | None = None) -> list[dict]:
+    logger.debug("Fetching log event details for tag=%s severity=%s", tag_name, severity)
     if not config.SQLSERVER_CONNECTION_STRING:
         raise RuntimeError("SQL Server connection is not configured.")
 
     import pyodbc
 
-    query = (
+    query = [
         "SELECT Tag, LogTimestamp, Severity, EventData, [Exception] "
         "FROM LogEventDetails "
         "WHERE LogTimestamp >= CAST(GETDATE() AS date) "
-        "AND Severity IN (?, ?) "
-        "AND Tag = ? "
+    ]
+    params: list[str] = []
+
+    if severity:
+        query.append("AND UPPER(Severity) = ? ")
+        params.append(severity.upper())
+
+    if tag_name:
+        query.append("AND Tag = ? ")
+        params.append(tag_name)
+
+    query.append(
         "ORDER BY LogTimestamp DESC"
     )
 
@@ -74,7 +84,7 @@ def list_log_event_details(tag_name: str) -> list[dict]:
         timeout=config.SQLSERVER_QUERY_TIMEOUT_SECONDS,
     ) as connection:
         cursor = connection.cursor()
-        cursor.execute(query, ("Error", "FATAL", tag_name))
+        cursor.execute("".join(query), params)
         columns = [column[0] for column in cursor.description]
         rows = cursor.fetchall()
         return [dict(zip(columns, row)) for row in rows]
