@@ -30,6 +30,18 @@ def _register_error_handlers(app: Flask) -> None:
 
 
 def _resolve_smtp_settings() -> dict[str, str | int | bool]:
+    if config.EMAIL_DELIVERY_METHOD == "outlook_desktop":
+        return {
+            "smtp_host": "",
+            "smtp_port": 0,
+            "sender": config.SMTP_SENDER,
+            "username": "",
+            "password": "",
+            "use_starttls": False,
+            "use_ssl": False,
+            "delivery_method": "outlook_desktop",
+        }
+
     if config.OUTLOOK_SMTP_ENABLED:
         return {
             "smtp_host": config.OUTLOOK_SMTP_HOST,
@@ -39,6 +51,7 @@ def _resolve_smtp_settings() -> dict[str, str | int | bool]:
             "password": config.SMTP_PASSWORD,
             "use_starttls": True,
             "use_ssl": False,
+            "delivery_method": "smtp",
         }
 
     return {
@@ -49,6 +62,7 @@ def _resolve_smtp_settings() -> dict[str, str | int | bool]:
         "password": config.SMTP_PASSWORD,
         "use_starttls": config.SMTP_USE_STARTTLS,
         "use_ssl": config.SMTP_USE_SSL,
+        "delivery_method": "smtp",
     }
 
 
@@ -75,6 +89,7 @@ def _send_failure_notification(failed: list[dict], subject: str, body_prefix: st
         password=str(smtp_settings["password"] or ""),
         use_starttls=bool(smtp_settings["use_starttls"]),
         use_ssl=bool(smtp_settings["use_ssl"]),
+        delivery_method=str(smtp_settings["delivery_method"]),
     )
 
 
@@ -315,6 +330,7 @@ def create_app() -> Flask:
                     password=str(smtp_settings["password"] or ""),
                     use_starttls=bool(smtp_settings["use_starttls"]),
                     use_ssl=bool(smtp_settings["use_ssl"]),
+                    delivery_method=str(smtp_settings["delivery_method"]),
                 )
                 flash("Notification email sent.", "success")
                 return redirect(url_for("reports"))
