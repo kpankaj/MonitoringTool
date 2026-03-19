@@ -281,11 +281,11 @@ def create_app() -> Flask:
     def log_viewer():
         interfaces = sorted({process["tag_name"] for process in process_service.list_processes()})
         selected_tag = request.args.get("tag_name", "ALL").strip() or "ALL"
-        selected_severity = request.args.get("severity", "ALL").strip().upper() or "ALL"
+        selected_severity = request.args.get("severity", "FATAL").strip().upper() or "FATAL"
         log_events: list[dict] = []
 
-        if selected_severity not in {"ALL", "FATAL", "ERROR"}:
-            selected_severity = "ALL"
+        if selected_severity not in {"FATAL", "ERROR"}:
+            selected_severity = "FATAL"
 
         if selected_tag != "ALL" and selected_tag not in interfaces:
             selected_tag = "ALL"
@@ -294,7 +294,7 @@ def create_app() -> Flask:
             try:
                 log_events = query_service.list_log_event_details(
                     tag_name=None if selected_tag == "ALL" else selected_tag,
-                    severity=None if selected_severity == "ALL" else selected_severity,
+                    severity=selected_severity,
                 )
             except Exception as exc:  # noqa: BLE001
                 logger.exception(
