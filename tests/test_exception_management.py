@@ -216,7 +216,7 @@ class ReportsRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Log Event Details', response.data)
         self.assertIn(b'Sample event', response.data)
-        list_log_event_details.assert_called_once_with('INT_A')
+        list_log_event_details.assert_called_once_with(tag_name='INT_A', severity='FATAL')
 
 
 if __name__ == '__main__':
