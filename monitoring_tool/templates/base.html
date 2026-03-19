@@ -17,6 +17,7 @@
       </div>
       <nav class="nav-links">
          <a class="nav-link {{ 'active' if request.endpoint == 'reports' else 'inactive' }}" href="{{ url_for('reports') }}">Failure Reports</a>
+         <a class="nav-link {{ 'active' if request.endpoint == 'log_viewer' else 'inactive' }}" href="{{ url_for('log_viewer') }}">Log Viewer</a>
          <div class="nav-item dropdown {{ 'active' if request.endpoint in ['configure', 'folders', 'recipients'] else 'inactive' }}">
           <button class="nav-link dropdown-toggle {{ 'active' if request.endpoint in ['configure', 'folders', 'recipients'] else 'inactive' }}" type="button">
             Admin

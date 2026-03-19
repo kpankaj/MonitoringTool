@@ -7,7 +7,7 @@ from werkzeug.exceptions import HTTPException
 
 from monitoring_tool import config, db
 from monitoring_tool.logging_setup import configure_logging
-from monitoring_tool.services import email_service, monitoring_service, process_service, report_service
+from monitoring_tool.services import email_service, monitoring_service, process_service, query_service, report_service
 
 
 logger = logging.getLogger(__name__)
@@ -275,6 +275,26 @@ def create_app() -> Flask:
             "interface_failure.html",
             tag_name=tag_name,
             fatal_events=fatal_events,
+        )
+
+    @app.route("/reports/log-viewer", methods=["GET"])
+    def log_viewer():
+        interfaces = sorted({process["tag_name"] for process in process_service.list_processes()})
+        selected_tag = request.args.get("tag_name", "").strip()
+        log_events: list[dict] = []
+
+        if selected_tag:
+            try:
+                log_events = query_service.list_log_event_details(selected_tag)
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("Failed to load log event details for %s", selected_tag)
+                flash(f"Failed to load log event details: {exc}", "error")
+
+        return render_template(
+            "log_viewer.html",
+            interfaces=interfaces,
+            selected_tag=selected_tag,
+            log_events=log_events,
         )
 
     @app.route("/reports/notify", methods=["GET", "POST"])
