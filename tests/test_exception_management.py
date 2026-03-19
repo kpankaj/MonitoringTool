@@ -83,6 +83,75 @@ class ReportsRouteTests(unittest.TestCase):
         self.assertEqual(payload['report_rows'][0]['tag_name'], 'job-1')
         run_cycle.assert_called_once_with(force_run=True)
 
+    def test_run_all_checks_sends_email_when_failures_exist(self) -> None:
+        with patch('monitoring_tool.app.monitoring_service.start_scheduler'):
+            app = create_app()
+
+        client = app.test_client()
+        with patch('monitoring_tool.app.monitoring_service.run_monitoring_cycle'), patch(
+            'monitoring_tool.app.process_service.list_processes',
+            return_value=[{'tag_name': 'job-1'}],
+        ), patch(
+            'monitoring_tool.app.report_service.list_process_reports',
+            return_value=[
+                {
+                    'tag_name': 'job-1',
+                    'folder_path': '/tmp',
+                    'reasons': ['Folder is not empty'],
+                    'fatal_events': [],
+                    'uc4_status': 'Not enabled',
+                    'status': 'Failed',
+                    'status_class': 'status-failed',
+                }
+            ],
+        ), patch(
+            'monitoring_tool.app.process_service.list_recipients',
+            return_value=['ops@example.com'],
+        ), patch(
+            'monitoring_tool.app.email_service.send_failure_email',
+        ) as send_failure_email:
+            response = client.post('/reports/run-checks')
+
+        self.assertEqual(response.status_code, 302)
+        send_failure_email.assert_called_once()
+
+    def test_run_all_checks_uses_outlook_smtp_when_enabled(self) -> None:
+        with patch('monitoring_tool.app.monitoring_service.start_scheduler'):
+            app = create_app()
+
+        client = app.test_client()
+        with patch('monitoring_tool.app.monitoring_service.run_monitoring_cycle'), patch(
+            'monitoring_tool.app.process_service.list_processes',
+            return_value=[{'tag_name': 'job-1'}],
+        ), patch(
+            'monitoring_tool.app.report_service.list_process_reports',
+            return_value=[
+                {
+                    'tag_name': 'job-1',
+                    'folder_path': '/tmp',
+                    'reasons': ['Folder is not empty'],
+                    'fatal_events': [],
+                    'uc4_status': 'Not enabled',
+                    'status': 'Failed',
+                    'status_class': 'status-failed',
+                }
+            ],
+        ), patch(
+            'monitoring_tool.app.process_service.list_recipients',
+            return_value=['ops@example.com'],
+        ), patch('monitoring_tool.app.config.OUTLOOK_SMTP_ENABLED', True), patch(
+            'monitoring_tool.app.config.OUTLOOK_SMTP_HOST', 'smtp.office365.com'
+        ), patch('monitoring_tool.app.config.OUTLOOK_SMTP_PORT', 587), patch(
+            'monitoring_tool.app.email_service.send_failure_email',
+        ) as send_failure_email:
+            response = client.post('/reports/run-checks')
+
+        self.assertEqual(response.status_code, 302)
+        kwargs = send_failure_email.call_args.kwargs
+        self.assertEqual(kwargs['smtp_host'], 'smtp.office365.com')
+        self.assertEqual(kwargs['smtp_port'], 587)
+        self.assertTrue(kwargs['use_starttls'])
+
 
 if __name__ == '__main__':
     unittest.main()

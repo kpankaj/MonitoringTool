@@ -13,6 +13,15 @@ SCHEMA_PATH = Path(os.getenv("MONITORING_SCHEMA_PATH", BASE_DIR / "scripts" / "s
 SMTP_HOST = os.getenv("SMTP_HOST", "localhost")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "25"))
 SMTP_SENDER = os.getenv("SMTP_SENDER", "monitoring@example.com")
+SMTP_USERNAME = os.getenv("SMTP_USERNAME", "").strip()
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "").strip()
+SMTP_USE_STARTTLS = os.getenv("SMTP_USE_STARTTLS", "false").strip().lower() in {"1", "true", "yes", "on"}
+SMTP_USE_SSL = os.getenv("SMTP_USE_SSL", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+# Outlook defaults (optional convenience mode)
+OUTLOOK_SMTP_ENABLED = os.getenv("OUTLOOK_SMTP_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+OUTLOOK_SMTP_HOST = os.getenv("OUTLOOK_SMTP_HOST", "smtp.office365.com")
+OUTLOOK_SMTP_PORT = int(os.getenv("OUTLOOK_SMTP_PORT", "587"))
 
 FLASK_SECRET = os.getenv("FLASK_SECRET", "monitoring-tool-secret")
 
