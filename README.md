@@ -36,6 +36,7 @@ export SMTP_USERNAME=""
 export SMTP_PASSWORD=""
 export SMTP_USE_STARTTLS=false
 export SMTP_USE_SSL=false
+export EMAIL_DELIVERY_METHOD=smtp
 ```
 
 Recipients can be managed from the Configure page.
@@ -53,6 +54,16 @@ export SMTP_PASSWORD="your-app-password-or-mailbox-password"
 ```
 
 When `OUTLOOK_SMTP_ENABLED=true`, MonitoringTool sends mail using STARTTLS on Outlook SMTP settings.
+
+### Outlook Desktop (local Outlook app on Windows)
+If the app runs on a Windows desktop with Outlook installed locally, you can bypass SMTP and send mail through the local Outlook client (`win32com.client`):
+
+```bash
+set EMAIL_DELIVERY_METHOD=outlook_desktop
+pip install pywin32
+```
+
+With `EMAIL_DELIVERY_METHOD=outlook_desktop`, MonitoringTool creates and sends the message via Outlook COM automation, so SMTP host/port are not used.
 
 ### SQL Server Query Checks
 Optional queries from **Configure Folder Paths** can be executed against a SQL Server database for check validation.

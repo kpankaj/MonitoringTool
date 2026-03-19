@@ -17,6 +17,7 @@ SMTP_USERNAME = os.getenv("SMTP_USERNAME", "").strip()
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "").strip()
 SMTP_USE_STARTTLS = os.getenv("SMTP_USE_STARTTLS", "false").strip().lower() in {"1", "true", "yes", "on"}
 SMTP_USE_SSL = os.getenv("SMTP_USE_SSL", "false").strip().lower() in {"1", "true", "yes", "on"}
+EMAIL_DELIVERY_METHOD = os.getenv("EMAIL_DELIVERY_METHOD", "smtp").strip().lower()
 
 # Outlook defaults (optional convenience mode)
 OUTLOOK_SMTP_ENABLED = os.getenv("OUTLOOK_SMTP_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}

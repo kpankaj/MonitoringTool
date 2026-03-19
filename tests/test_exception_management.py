@@ -154,6 +154,42 @@ class ReportsRouteTests(unittest.TestCase):
         self.assertEqual(kwargs['smtp_host'], 'smtp.office365.com')
         self.assertEqual(kwargs['smtp_port'], 587)
         self.assertTrue(kwargs['use_starttls'])
+        self.assertEqual(kwargs['delivery_method'], 'smtp')
+
+    def test_run_all_checks_uses_outlook_desktop_delivery_when_enabled(self) -> None:
+        with patch('monitoring_tool.app.monitoring_service.start_scheduler'):
+            app = create_app()
+
+        client = app.test_client()
+        with patch('monitoring_tool.app.monitoring_service.run_monitoring_cycle'), patch(
+            'monitoring_tool.app.process_service.list_processes',
+            return_value=[{'tag_name': 'job-1'}],
+        ), patch(
+            'monitoring_tool.app.report_service.list_process_reports',
+            return_value=[
+                {
+                    'tag_name': 'job-1',
+                    'folder_path': '/tmp',
+                    'reasons': ['Folder is not empty'],
+                    'fatal_events': [],
+                    'uc4_status': 'Not enabled',
+                    'status': 'Failed',
+                    'status_class': 'status-failed',
+                }
+            ],
+        ), patch(
+            'monitoring_tool.app.process_service.list_recipients',
+            return_value=['ops@example.com'],
+        ), patch('monitoring_tool.app.config.EMAIL_DELIVERY_METHOD', 'outlook_desktop'), patch(
+            'monitoring_tool.app.email_service.send_failure_email',
+        ) as send_failure_email:
+            response = client.post('/reports/run-checks')
+
+        self.assertEqual(response.status_code, 302)
+        kwargs = send_failure_email.call_args.kwargs
+        self.assertEqual(kwargs['delivery_method'], 'outlook_desktop')
+        self.assertEqual(kwargs['smtp_host'], '')
+        self.assertEqual(kwargs['smtp_port'], 0)
 
 
 if __name__ == '__main__':
