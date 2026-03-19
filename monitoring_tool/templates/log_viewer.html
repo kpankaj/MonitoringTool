@@ -26,7 +26,7 @@
     <p class="muted">Showing Error/FATAL events for {{ selected_tag }} from today.</p>
     {% if log_events %}
       <div class="table-wrapper">
-        <table>
+        <table data-log-event-table>
           <thead>
             <tr>
               <th>Tag</th>
@@ -49,9 +49,75 @@
           </tbody>
         </table>
       </div>
+      <div class="table-footer">
+        <p class="muted" data-page-summary></p>
+        <div class="pagination-controls" data-pagination></div>
+      </div>
     {% else %}
       <p class="muted">No log events found for the selected interface.</p>
     {% endif %}
   {% endif %}
 </section>
+
+<script>
+  const logEventTable = document.querySelector("[data-log-event-table]");
+
+  if (logEventTable) {
+    const tbody = logEventTable.querySelector("tbody");
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    const pageSummary = document.querySelector("[data-page-summary]");
+    const paginationControls = document.querySelector("[data-pagination]");
+    const pageSize = 25;
+    let currentPage = 1;
+
+    const renderPagination = () => {
+      const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+      currentPage = Math.min(currentPage, totalPages);
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+
+      rows.forEach((row, index) => {
+        row.style.display = index >= start && index < end ? "" : "none";
+      });
+
+      if (pageSummary) {
+        const totalRows = rows.length;
+        const startRow = totalRows === 0 ? 0 : start + 1;
+        const endRow = Math.min(end, totalRows);
+        pageSummary.textContent = `Showing ${startRow}-${endRow} of ${totalRows} entries`;
+      }
+
+      if (paginationControls) {
+        paginationControls.innerHTML = "";
+
+        const prevButton = document.createElement("button");
+        prevButton.type = "button";
+        prevButton.textContent = "Previous";
+        prevButton.disabled = currentPage === 1;
+        prevButton.addEventListener("click", () => {
+          currentPage = Math.max(1, currentPage - 1);
+          renderPagination();
+        });
+        paginationControls.appendChild(prevButton);
+
+        const pageIndicator = document.createElement("span");
+        pageIndicator.className = "page-indicator";
+        pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+        paginationControls.appendChild(pageIndicator);
+
+        const nextButton = document.createElement("button");
+        nextButton.type = "button";
+        nextButton.textContent = "Next";
+        nextButton.disabled = currentPage === totalPages;
+        nextButton.addEventListener("click", () => {
+          currentPage = Math.min(totalPages, currentPage + 1);
+          renderPagination();
+        });
+        paginationControls.appendChild(nextButton);
+      }
+    };
+
+    renderPagination();
+  }
+</script>
 {% endblock %}
