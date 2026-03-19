@@ -55,7 +55,9 @@ class ReportsRouteTests(unittest.TestCase):
             app = create_app()
 
         client = app.test_client()
-        with patch('monitoring_tool.app.monitoring_service.run_monitoring_cycle') as run_cycle, patch(
+        with patch('monitoring_tool.app.report_service.delete_fatal_events_before_today') as delete_old_events, patch(
+            'monitoring_tool.app.monitoring_service.run_monitoring_cycle'
+        ) as run_cycle, patch(
             'monitoring_tool.app.process_service.list_processes',
             return_value=[{'tag_name': 'job-1'}],
         ), patch(
@@ -81,6 +83,7 @@ class ReportsRouteTests(unittest.TestCase):
         payload = response.get_json()
         self.assertEqual(payload['message'], 'All configured process checks completed. Report refreshed with latest statuses.')
         self.assertEqual(payload['report_rows'][0]['tag_name'], 'job-1')
+        delete_old_events.assert_called_once_with()
         run_cycle.assert_called_once_with(force_run=True)
 
     def test_run_all_checks_sends_email_when_failures_exist(self) -> None:
