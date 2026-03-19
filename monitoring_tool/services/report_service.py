@@ -25,6 +25,11 @@ def record_fatal_event(tag_name: str, description: str) -> None:
     )
 
 
+def delete_fatal_events_before_today() -> None:
+    logger.info("Deleting fatal events from previous days")
+    db.execute("DELETE FROM fatal_events WHERE date(event_time) < date('now')")
+
+
 def list_process_reports(processes: list[dict]) -> list[dict]:
     logger.debug("Building process reports for %s process(es)", len(processes))
     reports = []

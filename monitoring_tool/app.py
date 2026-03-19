@@ -207,6 +207,7 @@ def create_app() -> Flask:
     @app.route("/reports/run-checks", methods=["POST"])
     def run_all_checks():
         logger.info("Manual run checks requested")
+        report_service.delete_fatal_events_before_today()
         monitoring_service.run_monitoring_cycle(force_run=True)
         processes = process_service.list_processes()
         report_rows = report_service.list_process_reports(processes)
