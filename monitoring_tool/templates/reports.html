@@ -128,19 +128,63 @@
   const runChecksButton = document.querySelector("[data-run-all-checks-button]");
   const runChecksStatus = document.querySelector("[data-run-check-status]");
   const runCheckProgress = document.querySelector("[data-run-check-progress]");
+  const RUN_CHECKS_COOLDOWN_MS = 2 * 60 * 1000;
+  const RUN_CHECKS_COOLDOWN_KEY = "reports.runAllChecks.cooldownUntil";
+  let runChecksCooldownIntervalId = null;
+
+  const getRunChecksCooldownRemaining = () => {
+    const cooldownUntil = Number(window.localStorage.getItem(RUN_CHECKS_COOLDOWN_KEY) || 0);
+    return Math.max(0, cooldownUntil - Date.now());
+  };
+
+  const formatCooldownDuration = (remainingMs) => {
+    const totalSeconds = Math.ceil(remainingMs / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  };
 
   const setRunChecksState = (isRunning, message = "") => {
     if (!runChecksButton || !runChecksStatus) {
       return;
     }
 
-    runChecksButton.disabled = isRunning;
+    const cooldownRemaining = getRunChecksCooldownRemaining();
+    runChecksButton.disabled = isRunning || cooldownRemaining > 0;
     runChecksButton.classList.toggle("is-loading", isRunning);
     runChecksButton.textContent = isRunning ? "Running Checks..." : "Run All Checks";
     if (runCheckProgress) {
       runCheckProgress.hidden = !isRunning;
     }
+    if (cooldownRemaining > 0 && !isRunning) {
+      runChecksStatus.textContent = `Run All Checks will be available in ${formatCooldownDuration(cooldownRemaining)}.`;
+      return;
+    }
     runChecksStatus.textContent = message;
+  };
+
+  const startRunChecksCooldownTimer = () => {
+    if (runChecksCooldownIntervalId) {
+      return;
+    }
+
+    runChecksCooldownIntervalId = window.setInterval(() => {
+      const cooldownRemaining = getRunChecksCooldownRemaining();
+      if (cooldownRemaining <= 0) {
+        window.clearInterval(runChecksCooldownIntervalId);
+        runChecksCooldownIntervalId = null;
+        window.localStorage.removeItem(RUN_CHECKS_COOLDOWN_KEY);
+      }
+      setRunChecksState(false);
+    }, 1000);
+  };
+
+  const beginRunChecksCooldown = () => {
+    window.localStorage.setItem(
+      RUN_CHECKS_COOLDOWN_KEY,
+      String(Date.now() + RUN_CHECKS_COOLDOWN_MS)
+    );
+    startRunChecksCooldownTimer();
   };
 
   if (reportTable) {
@@ -298,8 +342,19 @@
     });
 
     if (runChecksForm) {
+      if (getRunChecksCooldownRemaining() > 0) {
+        setRunChecksState(false);
+        startRunChecksCooldownTimer();
+      }
+
       runChecksForm.addEventListener("submit", async (event) => {
         event.preventDefault();
+        if (getRunChecksCooldownRemaining() > 0) {
+          setRunChecksState(false);
+          return;
+        }
+
+        beginRunChecksCooldown();
         setRunChecksState(true, "Running Checks in the background...");
 
         try {
