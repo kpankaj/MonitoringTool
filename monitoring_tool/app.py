@@ -29,6 +29,55 @@ def _register_error_handlers(app: Flask) -> None:
         return _render_error_page("An unexpected error occurred. Please contact support.", status_code=500)
 
 
+def _resolve_smtp_settings() -> dict[str, str | int | bool]:
+    if config.OUTLOOK_SMTP_ENABLED:
+        return {
+            "smtp_host": config.OUTLOOK_SMTP_HOST,
+            "smtp_port": config.OUTLOOK_SMTP_PORT,
+            "sender": config.SMTP_SENDER,
+            "username": config.SMTP_USERNAME,
+            "password": config.SMTP_PASSWORD,
+            "use_starttls": True,
+            "use_ssl": False,
+        }
+
+    return {
+        "smtp_host": config.SMTP_HOST,
+        "smtp_port": config.SMTP_PORT,
+        "sender": config.SMTP_SENDER,
+        "username": config.SMTP_USERNAME,
+        "password": config.SMTP_PASSWORD,
+        "use_starttls": config.SMTP_USE_STARTTLS,
+        "use_ssl": config.SMTP_USE_SSL,
+    }
+
+
+def _send_failure_notification(failed: list[dict], subject: str, body_prefix: str) -> None:
+    if not failed:
+        return
+
+    recipients_list = process_service.list_recipients()
+    if not recipients_list:
+        logger.warning("Failed checks detected but no recipients are configured for notifications")
+        return
+
+    smtp_settings = _resolve_smtp_settings()
+    body = f"{body_prefix}\n\n{_format_failure_email(failed)}"
+    logger.info("Sending automatic failure email to %s recipient(s)", len(recipients_list))
+    email_service.send_failure_email(
+        smtp_host=str(smtp_settings["smtp_host"]),
+        smtp_port=int(smtp_settings["smtp_port"]),
+        sender=str(smtp_settings["sender"]),
+        recipients=recipients_list,
+        subject=subject,
+        body=body,
+        username=str(smtp_settings["username"] or ""),
+        password=str(smtp_settings["password"] or ""),
+        use_starttls=bool(smtp_settings["use_starttls"]),
+        use_ssl=bool(smtp_settings["use_ssl"]),
+    )
+
+
 def create_app() -> Flask:
     configure_logging()
     logger.info("Creating Flask application")
@@ -159,6 +208,22 @@ def create_app() -> Flask:
     def run_all_checks():
         logger.info("Manual run checks requested")
         monitoring_service.run_monitoring_cycle(force_run=True)
+        processes = process_service.list_processes()
+        report_rows = report_service.list_process_reports(processes)
+        failed = [row for row in report_rows if row["status"] == "Failed"]
+        if failed:
+            try:
+                _send_failure_notification(
+                    failed=failed,
+                    subject="MonitoringTool Run All Checks Error",
+                    body_prefix=(
+                        "Run All Checks completed with one or more failures. "
+                        "See details below."
+                    ),
+                )
+            except Exception:  # noqa: BLE001
+                logger.exception("Failed to send automatic failure notification email")
+
         success_message = "All configured process checks completed. Report refreshed with latest statuses."
 
         expects_json = (
@@ -166,8 +231,6 @@ def create_app() -> Flask:
             or request.accept_mimetypes.best == "application/json"
         )
         if expects_json:
-            processes = process_service.list_processes()
-            report_rows = report_service.list_process_reports(processes)
             return jsonify({"message": success_message, "report_rows": report_rows})
 
         flash(success_message, "success")
@@ -234,21 +297,23 @@ def create_app() -> Flask:
                     message=message,
                 )
             
-            smtp_host = config.SMTP_HOST
-            smtp_port = config.SMTP_PORT
-            sender = config.SMTP_SENDER
+            smtp_settings = _resolve_smtp_settings()
             subject = "MonitoringTool Failure Report"
             body = f"{message}\n\n{_format_failure_email(failed)}"
 
             try:
                 logger.info("Sending notification email to %s recipient(s)", len(selected_recipients))
                 email_service.send_failure_email(
-                    smtp_host=smtp_host,
-                    smtp_port=smtp_port,
-                    sender=sender,
+                    smtp_host=str(smtp_settings["smtp_host"]),
+                    smtp_port=int(smtp_settings["smtp_port"]),
+                    sender=str(smtp_settings["sender"]),
                     recipients=selected_recipients,
                     subject=subject,
                     body=body,
+                    username=str(smtp_settings["username"] or ""),
+                    password=str(smtp_settings["password"] or ""),
+                    use_starttls=bool(smtp_settings["use_starttls"]),
+                    use_ssl=bool(smtp_settings["use_ssl"]),
                 )
                 flash("Notification email sent.", "success")
                 return redirect(url_for("reports"))

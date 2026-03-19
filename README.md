@@ -32,9 +32,27 @@ Configure SMTP settings using environment variables:
 export SMTP_HOST=localhost
 export SMTP_PORT=25
 export SMTP_SENDER=monitoring@example.com
+export SMTP_USERNAME=""
+export SMTP_PASSWORD=""
+export SMTP_USE_STARTTLS=false
+export SMTP_USE_SSL=false
 ```
 
 Recipients can be managed from the Configure page.
+
+### Microsoft Outlook SMTP
+To use Microsoft Outlook / Microsoft 365 SMTP with authentication:
+
+```bash
+export OUTLOOK_SMTP_ENABLED=true
+export OUTLOOK_SMTP_HOST=smtp.office365.com
+export OUTLOOK_SMTP_PORT=587
+export SMTP_SENDER=your-account@your-domain.com
+export SMTP_USERNAME=your-account@your-domain.com
+export SMTP_PASSWORD="your-app-password-or-mailbox-password"
+```
+
+When `OUTLOOK_SMTP_ENABLED=true`, MonitoringTool sends mail using STARTTLS on Outlook SMTP settings.
 
 ### SQL Server Query Checks
 Optional queries from **Configure Folder Paths** can be executed against a SQL Server database for check validation.
