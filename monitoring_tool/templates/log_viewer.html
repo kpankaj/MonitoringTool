@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">MAMS</p>
+      <h2>Log Event Details</h2>
+    </div>
+  </div>
+
+  <form method="get" action="{{ url_for('log_viewer') }}" class="form-grid">
+    <label>
+      Interface
+      <select name="tag_name" required>
+        <option value="">Select an interface</option>
+        {% for interface in interfaces %}
+          <option value="{{ interface }}" {% if interface == selected_tag %}selected{% endif %}>{{ interface }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit">View Report</button>
+  </form>
+
+  {% if selected_tag %}
+    <p class="muted">Showing Error/FATAL events for {{ selected_tag }} from today.</p>
+    {% if log_events %}
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Tag</th>
+              <th>Log Timestamp</th>
+              <th>Severity</th>
+              <th>Event Data</th>
+              <th>Exception</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in log_events %}
+              <tr>
+                <td>{{ event.Tag }}</td>
+                <td>{{ event.LogTimestamp }}</td>
+                <td>{{ event.Severity }}</td>
+                <td>{{ event.EventData }}</td>
+                <td>{{ event.Exception or "-" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">No log events found for the selected interface.</p>
+    {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

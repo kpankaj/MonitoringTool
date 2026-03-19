@@ -191,6 +191,33 @@ class ReportsRouteTests(unittest.TestCase):
         self.assertEqual(kwargs['smtp_host'], '')
         self.assertEqual(kwargs['smtp_port'], 0)
 
+    def test_log_viewer_renders_interfaces_and_events(self) -> None:
+        with patch('monitoring_tool.app.monitoring_service.start_scheduler'):
+            app = create_app()
+
+        client = app.test_client()
+        with patch(
+            'monitoring_tool.app.process_service.list_processes',
+            return_value=[{'tag_name': 'INT_A'}, {'tag_name': 'INT_B'}],
+        ), patch(
+            'monitoring_tool.app.query_service.list_log_event_details',
+            return_value=[
+                {
+                    'Tag': 'INT_A',
+                    'LogTimestamp': '2026-03-19 01:10:00',
+                    'Severity': 'Error',
+                    'EventData': 'Sample event',
+                    'Exception': 'Sample exception',
+                }
+            ],
+        ) as list_log_event_details:
+            response = client.get('/reports/log-viewer?tag_name=INT_A')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Log Event Details', response.data)
+        self.assertIn(b'Sample event', response.data)
+        list_log_event_details.assert_called_once_with('INT_A')
+
 
 if __name__ == '__main__':
     unittest.main()
