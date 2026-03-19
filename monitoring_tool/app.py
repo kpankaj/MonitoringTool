@@ -280,20 +280,35 @@ def create_app() -> Flask:
     @app.route("/reports/log-viewer", methods=["GET"])
     def log_viewer():
         interfaces = sorted({process["tag_name"] for process in process_service.list_processes()})
-        selected_tag = request.args.get("tag_name", "").strip()
+        selected_tag = request.args.get("tag_name", "ALL").strip() or "ALL"
+        selected_severity = request.args.get("severity", "ALL").strip().upper() or "ALL"
         log_events: list[dict] = []
 
-        if selected_tag:
+        if selected_severity not in {"ALL", "FATAL", "ERROR"}:
+            selected_severity = "ALL"
+
+        if selected_tag != "ALL" and selected_tag not in interfaces:
+            selected_tag = "ALL"
+
+        if selected_tag or selected_severity:
             try:
-                log_events = query_service.list_log_event_details(selected_tag)
+                log_events = query_service.list_log_event_details(
+                    tag_name=None if selected_tag == "ALL" else selected_tag,
+                    severity=None if selected_severity == "ALL" else selected_severity,
+                )
             except Exception as exc:  # noqa: BLE001
-                logger.exception("Failed to load log event details for %s", selected_tag)
+                logger.exception(
+                    "Failed to load log event details for tag=%s severity=%s",
+                    selected_tag,
+                    selected_severity,
+                )
                 flash(f"Failed to load log event details: {exc}", "error")
 
         return render_template(
             "log_viewer.html",
             interfaces=interfaces,
             selected_tag=selected_tag,
+            selected_severity=selected_severity,
             log_events=log_events,
         )
 
