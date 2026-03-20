@@ -767,3 +767,22 @@ textarea:focus {
   }
 }
    
+
+
+.run-all-checks-button:disabled,
+.run-all-checks-button:disabled:hover {
+  background: #94a3b8;
+  color: #f8fafc;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.fatal-event-label {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.fatal-event-label--yes {
+  color: #dc2626;
+}

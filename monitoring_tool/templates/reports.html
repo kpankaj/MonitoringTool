@@ -10,7 +10,7 @@
     </div>
     <div class="header-actions">
       <form method="post" action="{{ url_for('run_all_checks') }}" data-run-all-checks-form>
-        <button class="button secondary" type="submit" data-run-all-checks-button>Run All Checks</button>
+        <button class="button primary run-all-checks-button" type="submit" data-run-all-checks-button>Run All Checks</button>
       </form>
       <div class="run-check-progress" data-run-check-progress hidden>
         <img
@@ -18,7 +18,7 @@
           src="data:image/gif;base64,R0lGODlhIAAgAPQAAP///8zMzJmZmWZmZjMzMwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCQAAACwAAAAAIAAgAAAFvCAgjmRpnmiqrmzrvnAsz3Rt33iu73zvwHJYQJIKh8Si8YhMJoNQqPRaLQqHxKJxWLxqNBqPRqPVaDR6vQ6n0+n8foPA4HA4HBYLh8PhcDgcDofD4XA4nU6n0+n8QAOw=="
           alt="Loading indicator"
         />
-        <span class="muted">Running Checks in the background...</span>
+        <span class="muted">Running Checks..... </span>
       </div>
       <p class="muted run-check-status" data-run-check-status aria-live="polite"></p>
       <a class="button primary" href="{{ url_for('notify_report') }}">Send Email Notifcation</a>
@@ -62,13 +62,9 @@
             <td>{{ process.folder_path }}</td>
             <td>
               {% if process.fatal_events %}
-                <ul>
-                  {% for event in process.fatal_events %}
-                    <li>{{ event.event_time }} - {{ event.description }}</li>
-                  {% endfor %}
-                </ul>
+                <span class="fatal-event-label fatal-event-label--yes">Yes</span>
               {% else %}
-                <span class="muted">None</span>
+                <span class="fatal-event-label">None</span>
               {% endif %}
             </td>
 
