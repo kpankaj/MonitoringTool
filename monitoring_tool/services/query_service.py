@@ -67,13 +67,15 @@ def _format_query_with_params(query: str, params: list[str]) -> str:
 
 def list_log_event_details(tag_name: str | None = None, severity: str | None = None) -> list[dict]:
     logger.debug("Fetching log event details for tag=%s severity=%s", tag_name, severity)
+    print(f"[DEBUG] list_log_event_details called with tag_name={tag_name!r}, severity={severity!r}")
     if not config.SQLSERVER_CONNECTION_STRING:
         raise RuntimeError("SQL Server connection is not configured.")
 
     import pyodbc
 
     query = [
-        "SELECT Tag, LogTimestamp, Severity, EventData, [Exception] "
+        "SELECT Tag AS tag, LogTimestamp AS log_timestamp, Severity AS severity, "
+        "EventData AS event_data, [Exception] AS exception_text "
         "FROM LogEventDetails "
         "WHERE LogTimestamp >= CAST(GETDATE() AS date) "
     ]
@@ -81,11 +83,11 @@ def list_log_event_details(tag_name: str | None = None, severity: str | None = N
 
     if severity:
         query.append("AND UPPER(Severity) = ? ")
-        params.append(severity.upper())
+        params.append(severity.strip().upper())
 
     if tag_name:
-        query.append("AND Tag = ? ")
-        params.append(tag_name)
+        query.append("AND UPPER(Tag) = ? ")
+        params.append(tag_name.strip().upper())
 
     query.append(
         "ORDER BY LogTimestamp DESC"
@@ -97,8 +99,11 @@ def list_log_event_details(tag_name: str | None = None, severity: str | None = N
     ) as connection:
         cursor = connection.cursor()
         final_query = "".join(query)
-        print(_format_query_with_params(final_query, params))
+        print(f"[DEBUG] Executing LogEventDetails query: {_format_query_with_params(final_query, params)}")
         cursor.execute(final_query, params)
         columns = [column[0] for column in cursor.description]
         rows = cursor.fetchall()
+        print(f"[DEBUG] SQL returned {len(rows)} row(s) with columns={columns}")
+        if rows:
+            print(f"[DEBUG] First row preview: {dict(zip(columns, rows[0]))}")
         return [dict(zip(columns, row)) for row in rows]
