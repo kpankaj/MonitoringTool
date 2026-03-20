@@ -308,6 +308,11 @@ def create_app() -> Flask:
                     tag_name=None if selected_tag == "ALL" else selected_tag,
                     severity=selected_severity,
                 )
+                print(
+                    "[DEBUG] log_viewer loaded "
+                    f"{len(log_events)} event(s) for selected_tag={selected_tag!r}, "
+                    f"selected_severity={selected_severity!r}"
+                )
             except Exception as exc:  # noqa: BLE001
                 logger.exception(
                     "Failed to load log event details for tag=%s severity=%s",

@@ -76,11 +76,11 @@
           <tbody>
             {% for event in log_events %}
               <tr>
-                <td>{{ event.Tag }}</td>
-                <td>{{ event.LogTimestamp }}</td>
-                <td>{{ event.Severity }}</td>
-                <td>{{ event.EventData }}</td>
-                <td>{{ event.Exception or "-" }}</td>
+                <td>{{ event.tag }}</td>
+                <td>{{ event.log_timestamp }}</td>
+                <td>{{ event.severity }}</td>
+                <td>{{ event.event_data }}</td>
+                <td>{{ event.exception_text or "-" }}</td>
               </tr>
             {% endfor %}
           </tbody>
