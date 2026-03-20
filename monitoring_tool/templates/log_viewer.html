@@ -29,6 +29,36 @@
     <button type="submit">View Report</button>
   </form>
 
+  {% if selected_tag != "ALL" and failure_summary %}
+    <div class="report-context">
+      <h3>Failure Details</h3>
+      <div class="report-context-grid">
+        <div class="report-context-row">
+          <span class="report-context-label">Tag</span>
+          <span>{{ selected_tag }}</span>
+        </div>
+        <div class="report-context-row">
+          <span class="report-context-label">UC4 Status Check</span>
+          <span>{{ failure_summary.uc4_status }}</span>
+        </div>
+        <div class="report-context-row">
+          <span class="report-context-label">Reasons</span>
+          <div>
+            {% if failure_summary.reasons %}
+              <ul>
+                {% for reason in failure_summary.reasons %}
+                  <li>{{ reason }}</li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <span class="muted">No issues</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
   {% if selected_tag or selected_severity %}
     <p class="muted">Showing {{ selected_severity }} events for {% if selected_tag == "ALL" %}all interfaces{% else %}{{ selected_tag }}{% endif %} from today.</p>
     {% if log_events %}
