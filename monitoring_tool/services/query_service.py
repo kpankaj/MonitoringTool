@@ -65,9 +65,32 @@ def _format_query_with_params(query: str, params: list[str]) -> str:
         formatted_query = formatted_query.replace("?", rendered_param, 1)
     return formatted_query
 
+
+def _fetch_all_rows(cursor) -> tuple[list[str], list]:
+    """Fetch rows from the current and any subsequent result sets.
+
+    Some SQL Server connections can surface an initial empty result set
+    (for example from intermediate statements/triggers) before the
+    expected SELECT result set. This helper walks through available
+    result sets and accumulates rows from any set that has columns.
+    """
+    columns: list[str] = []
+    rows = []
+
+    while True:
+        if cursor.description:
+            if not columns:
+                columns = [column[0] for column in cursor.description]
+            rows.extend(cursor.fetchall())
+
+        if not cursor.nextset():
+            break
+
+    return columns, rows
+
+
 def list_log_event_details(tag_name: str | None = None, severity: str | None = None) -> list[dict]:
     logger.debug("Fetching log event details for tag=%s severity=%s", tag_name, severity)
-    print(f"[DEBUG] list_log_event_details called with tag_name={tag_name!r}, severity={severity!r}")
     if not config.SQLSERVER_CONNECTION_STRING:
         raise RuntimeError("SQL Server connection is not configured.")
 
@@ -99,14 +122,11 @@ def list_log_event_details(tag_name: str | None = None, severity: str | None = N
     ) as connection:
         cursor = connection.cursor()
         final_query = "".join(query)
-        print(f"[DEBUG] Executing LogEventDetails query: {_format_query_with_params(final_query, params)}")
+        logger.debug("Executing LogEventDetails query: %s", _format_query_with_params(final_query, params))
         # pyodbc expects each positional parameter as its own argument.
         # Passing the list directly can bind it as a single value, which
         # causes filters to behave incorrectly and may return zero rows.
         cursor.execute(final_query, *params)
-        columns = [column[0] for column in cursor.description]
-        rows = cursor.fetchall()
-        print(f"[DEBUG] SQL returned {len(rows)} row(s) with columns={columns}")
-        if rows:
-            print(f"[DEBUG] First row preview: {dict(zip(columns, rows[0]))}")
+        columns, rows = _fetch_all_rows(cursor)
+        logger.debug("LogEventDetails query returned %d row(s)", len(rows))
         return [dict(zip(columns, row)) for row in rows]
