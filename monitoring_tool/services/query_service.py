@@ -53,6 +53,18 @@ def _query_sqlserver(query: str):
         return cursor.fetchmany(1)
 
 
+
+
+def _format_query_with_params(query: str, params: list[str]) -> str:
+    formatted_query = query
+    for param in params:
+        if isinstance(param, str):
+            rendered_param = "'" + param.replace("'", "''") + "'"
+        else:
+            rendered_param = str(param)
+        formatted_query = formatted_query.replace("?", rendered_param, 1)
+    return formatted_query
+
 def list_log_event_details(tag_name: str | None = None, severity: str | None = None) -> list[dict]:
     logger.debug("Fetching log event details for tag=%s severity=%s", tag_name, severity)
     if not config.SQLSERVER_CONNECTION_STRING:
@@ -84,7 +96,9 @@ def list_log_event_details(tag_name: str | None = None, severity: str | None = N
         timeout=config.SQLSERVER_QUERY_TIMEOUT_SECONDS,
     ) as connection:
         cursor = connection.cursor()
-        cursor.execute("".join(query), params)
+        final_query = "".join(query)
+        print(_format_query_with_params(final_query, params))
+        cursor.execute(final_query, params)
         columns = [column[0] for column in cursor.description]
         rows = cursor.fetchall()
         return [dict(zip(columns, row)) for row in rows]
