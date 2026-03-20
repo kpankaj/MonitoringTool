@@ -13,7 +13,7 @@
           <p class="eyebrow">MAMS</p>
           <h1> Monitoring Tool</h1>
         </div>
-        <span class="status-pill">MAMS Dashboard</span>
+        <a class="status-pill" href="{{ url_for('reports') }}">MAMS Dashboard</a>
       </div>
       <nav class="nav-links">
          <a class="nav-link {{ 'active' if request.endpoint == 'reports' else 'inactive' }}" href="{{ url_for('reports') }}">Failure Reports</a>
