@@ -56,6 +56,10 @@ body {
   background: rgba(15, 23, 42, 0.4);
   border: 1px solid rgba(148, 163, 184, 0.3);
   font-weight: 600;
+  color: #f8fafc;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
 }
 
 .nav-links {
@@ -253,6 +257,10 @@ button.secondary:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+}
+
+.run-check-progress[hidden] {
+  display: none !important;
 }
 
 .run-check-progress-gif {
