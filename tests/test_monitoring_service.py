@@ -1,6 +1,6 @@
 import unittest
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from monitoring_tool.services import filesystem_service, monitoring_service, query_service
 
@@ -264,6 +264,56 @@ class QueryServiceTests(unittest.TestCase):
         self.assertFalse(result.is_failed)
         query_sqlserver.assert_called_once_with("select 1")
         sqlite_query.assert_not_called()
+
+    def test_fetch_all_rows_reads_across_result_sets(self) -> None:
+        class FakeCursor:
+            def __init__(self) -> None:
+                self._index = 0
+                self._descriptions = [None, [("tag",), ("severity",)]]
+
+            @property
+            def description(self):
+                return self._descriptions[self._index]
+
+            def fetchall(self):
+                return [("INT_A", "FATAL")]
+
+            def nextset(self):
+                if self._index == 0:
+                    self._index += 1
+                    return True
+                return False
+
+        fetched_columns, rows = query_service._fetch_all_rows(FakeCursor())
+
+        self.assertEqual(fetched_columns, ["tag", "severity"])
+        self.assertEqual(rows, [("INT_A", "FATAL")])
+
+    def test_list_log_event_details_executes_with_expanded_params(self) -> None:
+        cursor = MagicMock()
+        cursor.description = [("tag",), ("severity",)]
+        cursor.fetchall.return_value = [("INT_A", "FATAL")]
+        cursor.nextset.return_value = False
+
+        connection = MagicMock()
+        connection.cursor.return_value = cursor
+        connection.__enter__.return_value = connection
+        connection.__exit__.return_value = None
+
+        with patch("monitoring_tool.services.query_service.config.SQLSERVER_CONNECTION_STRING", "Driver=mock"), patch(
+            "monitoring_tool.services.query_service.config.SQLSERVER_QUERY_TIMEOUT_SECONDS", 30
+        ), patch(
+            "pyodbc.connect",
+            return_value=connection,
+        ):
+            rows = query_service.list_log_event_details(tag_name="INT_A", severity="fatal")
+
+        executed_query, severity_param, tag_param = cursor.execute.call_args.args
+        self.assertIn("UPPER(Severity) = ?", executed_query)
+        self.assertIn("UPPER(Tag) = ?", executed_query)
+        self.assertEqual(severity_param, "FATAL")
+        self.assertEqual(tag_param, "INT_A")
+        self.assertEqual(rows, [{"tag": "INT_A", "severity": "FATAL"}])
 
 
 if __name__ == "__main__":
