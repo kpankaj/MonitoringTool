@@ -100,7 +100,10 @@ def list_log_event_details(tag_name: str | None = None, severity: str | None = N
         cursor = connection.cursor()
         final_query = "".join(query)
         print(f"[DEBUG] Executing LogEventDetails query: {_format_query_with_params(final_query, params)}")
-        cursor.execute(final_query, params)
+        # pyodbc expects each positional parameter as its own argument.
+        # Passing the list directly can bind it as a single value, which
+        # causes filters to behave incorrectly and may return zero rows.
+        cursor.execute(final_query, *params)
         columns = [column[0] for column in cursor.description]
         rows = cursor.fetchall()
         print(f"[DEBUG] SQL returned {len(rows)} row(s) with columns={columns}")
