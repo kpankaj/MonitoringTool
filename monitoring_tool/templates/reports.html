@@ -78,7 +78,13 @@
                   {{ process.status }}
                 </a>
               {% else %}
-                <span class="status-badge {{ process.status_class }}">{{ process.status }}</span>
+                <a
+                  class="status-badge {{ process.status_class }} status-link"
+                  href="{{ url_for('log_viewer', tag_name=process.tag_name, severity='INFO') }}"
+                  role="button"
+                >
+                  {{ process.status }}
+                </a>
               {% endif %}
             </td>
           </tr>
@@ -275,8 +281,8 @@
           ? `<ul>${fatalEvents.map((event) => `<li>${event.event_time} - ${event.description}</li>`).join("")}</ul>`
           : '<span class="muted">None</span>';
         const statusMarkup = process.status === "Failed"
-          ? `<a class="status-badge ${process.status_class} status-link" href="/reports/interface?tag_name=${encodeURIComponent(process.tag_name)}" role="button">${process.status}</a>`
-          : `<span class="status-badge ${process.status_class}">${process.status}</span>`;
+          ? `<a class="status-badge ${process.status_class} status-link" href="/reports/log-viewer?tag_name=${encodeURIComponent(process.tag_name)}&severity=FATAL" role="button">${process.status}</a>`
+          : `<a class="status-badge ${process.status_class} status-link" href="/reports/log-viewer?tag_name=${encodeURIComponent(process.tag_name)}&severity=INFO" role="button">${process.status}</a>`;
 
         return `<tr>
           <td>${process.tag_name ?? ""}</td>
