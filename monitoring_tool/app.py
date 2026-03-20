@@ -283,12 +283,24 @@ def create_app() -> Flask:
         selected_tag = request.args.get("tag_name", "ALL").strip() or "ALL"
         selected_severity = request.args.get("severity", "FATAL").strip().upper() or "FATAL"
         log_events: list[dict] = []
+        failure_summary: dict | None = None
 
         if selected_severity not in {"FATAL", "ERROR"}:
             selected_severity = "FATAL"
 
         if selected_tag != "ALL" and selected_tag not in interfaces:
             selected_tag = "ALL"
+
+        if selected_tag != "ALL":
+            latest_run = report_service.get_latest_run(selected_tag)
+            reasons = list(latest_run["reasons"]) if latest_run else []
+            fatal_events = report_service.list_fatal_events(selected_tag)
+            if fatal_events:
+                reasons.append("Fatal event(s) recorded")
+            failure_summary = {
+                "uc4_status": latest_run["uc4_status"] if latest_run else "Not yet run",
+                "reasons": reasons,
+            }
 
         if selected_tag or selected_severity:
             try:
@@ -310,6 +322,7 @@ def create_app() -> Flask:
             selected_tag=selected_tag,
             selected_severity=selected_severity,
             log_events=log_events,
+            failure_summary=failure_summary,
         )
 
     @app.route("/reports/notify", methods=["GET", "POST"])

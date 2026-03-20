@@ -43,24 +43,12 @@
           </th>
           <th scope="col" aria-sort="none">
             <button class="sort-button" type="button" data-sort-index="2">
-              Reasons
-              <span class="sort-indicator" aria-hidden="true"></span>
-            </button>
-          </th>
-          <th scope="col" aria-sort="none">
-            <button class="sort-button" type="button" data-sort-index="3">
               Fatal events
               <span class="sort-indicator" aria-hidden="true"></span>
             </button>
           </th>
           <th scope="col" aria-sort="none">
-            <button class="sort-button" type="button" data-sort-index="4">
-              UC4 Status check
-              <span class="sort-indicator" aria-hidden="true"></span>
-            </button>
-          </th>
-          <th scope="col" aria-sort="none">
-            <button class="sort-button" type="button" data-sort-index="5">
+            <button class="sort-button" type="button" data-sort-index="3">
               Status
               <span class="sort-indicator" aria-hidden="true"></span>
             </button>
@@ -73,17 +61,6 @@
             <td>{{ process.tag_name }}</td>
             <td>{{ process.folder_path }}</td>
             <td>
-              {% if process.reasons %}
-                <ul>
-                  {% for reason in process.reasons %}
-                    <li>{{ reason }}</li>
-                  {% endfor %}
-                </ul>
-              {% else %}
-                <span class="muted">No issues</span>
-              {% endif %}
-            </td>
-            <td>
               {% if process.fatal_events %}
                 <ul>
                   {% for event in process.fatal_events %}
@@ -94,13 +71,12 @@
                 <span class="muted">None</span>
               {% endif %}
             </td>
-            <td>{{ process.uc4_status }}</td>
 
             <td>
               {% if process.status == "Failed" %}
                 <a
                   class="status-badge {{ process.status_class }} status-link"
-                  href="{{ url_for('interface_failure', tag_name=process.tag_name) }}"
+                  href="{{ url_for('log_viewer', tag_name=process.tag_name, severity='FATAL') }}"
                   role="button"
                 >
                   {{ process.status }}
