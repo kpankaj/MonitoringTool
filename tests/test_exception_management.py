@@ -117,6 +117,46 @@ class ReportsRouteTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 302)
         send_failure_email.assert_called_once()
+        kwargs = send_failure_email.call_args.kwargs
+        self.assertEqual(kwargs['subject'], 'MonitoringTool Run All Checks Error')
+        self.assertIn('Run summary: 1 total process(es), 0 successful, 1 failed.', kwargs['body'])
+        self.assertIn('Folder is not empty', kwargs['body'])
+
+    def test_run_all_checks_sends_success_email_when_checks_pass(self) -> None:
+        with patch('monitoring_tool.app.monitoring_service.start_scheduler'):
+            app = create_app()
+
+        client = app.test_client()
+        with patch('monitoring_tool.app.monitoring_service.run_monitoring_cycle'), patch(
+            'monitoring_tool.app.process_service.list_processes',
+            return_value=[{'tag_name': 'job-1'}],
+        ), patch(
+            'monitoring_tool.app.report_service.list_process_reports',
+            return_value=[
+                {
+                    'tag_name': 'job-1',
+                    'folder_path': '/tmp',
+                    'reasons': [],
+                    'fatal_events': [],
+                    'uc4_status': 'OK',
+                    'status': 'Success',
+                    'status_class': 'status-success',
+                }
+            ],
+        ), patch(
+            'monitoring_tool.app.process_service.list_recipients',
+            return_value=['ops@example.com'],
+        ), patch(
+            'monitoring_tool.app.email_service.send_failure_email',
+        ) as send_failure_email:
+            response = client.post('/reports/run-checks')
+
+        self.assertEqual(response.status_code, 302)
+        send_failure_email.assert_called_once()
+        kwargs = send_failure_email.call_args.kwargs
+        self.assertEqual(kwargs['subject'], 'MonitoringTool Run All Checks Success')
+        self.assertIn('Run summary: 1 total process(es), 1 successful, 0 failed.', kwargs['body'])
+        self.assertIn('No issues detected.', kwargs['body'])
 
     def test_run_all_checks_uses_outlook_smtp_when_enabled(self) -> None:
         with patch('monitoring_tool.app.monitoring_service.start_scheduler'):
@@ -203,11 +243,11 @@ class ReportsRouteTests(unittest.TestCase):
             'monitoring_tool.app.query_service.list_log_event_details',
             return_value=[
                 {
-                    'Tag': 'INT_A',
-                    'LogTimestamp': '2026-03-19 01:10:00',
-                    'Severity': 'Error',
-                    'EventData': 'Sample event',
-                    'Exception': 'Sample exception',
+                    'tag': 'INT_A',
+                    'log_timestamp': '2026-03-19 01:10:00',
+                    'severity': 'Error',
+                    'event_data': 'Sample event',
+                    'exception_text': 'Sample exception',
                 }
             ],
         ) as list_log_event_details:

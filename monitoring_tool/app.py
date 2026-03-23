@@ -66,18 +66,15 @@ def _resolve_smtp_settings() -> dict[str, str | int | bool]:
     }
 
 
-def _send_failure_notification(failed: list[dict], subject: str, body_prefix: str) -> None:
-    if not failed:
-        return
-
+def _send_report_notification(report_rows: list[dict], subject: str, body_prefix: str) -> None:
     recipients_list = process_service.list_recipients()
     if not recipients_list:
-        logger.warning("Failed checks detected but no recipients are configured for notifications")
+        logger.warning("Run checks completed but no recipients are configured for notifications")
         return
 
     smtp_settings = _resolve_smtp_settings()
-    body = f"{body_prefix}\n\n{_format_failure_email(failed)}"
-    logger.info("Sending automatic failure email to %s recipient(s)", len(recipients_list))
+    body = f"{body_prefix}\n\n{_format_report_email(report_rows)}"
+    logger.info("Sending automatic report email to %s recipient(s)", len(recipients_list))
     email_service.send_failure_email(
         smtp_host=str(smtp_settings["smtp_host"]),
         smtp_port=int(smtp_settings["smtp_port"]),
@@ -227,18 +224,24 @@ def create_app() -> Flask:
         processes = process_service.list_processes()
         report_rows = report_service.list_process_reports(processes)
         failed = [row for row in report_rows if row["status"] == "Failed"]
-        if failed:
-            try:
-                _send_failure_notification(
-                    failed=failed,
-                    subject="MonitoringTool Run All Checks Error",
-                    body_prefix=(
-                        "Run All Checks completed with one or more failures. "
-                        "See details below."
-                    ),
-                )
-            except Exception:  # noqa: BLE001
-                logger.exception("Failed to send automatic failure notification email")
+        all_checks_successful = not failed
+
+        try:
+            _send_report_notification(
+                report_rows=report_rows,
+                subject=(
+                    "MonitoringTool Run All Checks Success"
+                    if all_checks_successful
+                    else "MonitoringTool Run All Checks Error"
+                ),
+                body_prefix=(
+                    "Run All Checks completed successfully. See details below."
+                    if all_checks_successful
+                    else "Run All Checks completed with one or more failures. See details below."
+                ),
+            )
+        except Exception:  # noqa: BLE001
+            logger.exception("Failed to send automatic run-check report email")
 
         success_message = "All configured process checks completed. Report refreshed with latest statuses."
 
@@ -334,7 +337,6 @@ def create_app() -> Flask:
     def notify_report():
         processes = process_service.list_processes()
         report_rows = report_service.list_process_reports(processes)
-        failed = [row for row in report_rows if row["status"] == "Failed"]
         recipients_list = process_service.list_recipients()
         selected_recipients = recipients_list
         message = ""
@@ -368,7 +370,7 @@ def create_app() -> Flask:
             
             smtp_settings = _resolve_smtp_settings()
             subject = "MonitoringTool Failure Report"
-            body = f"{message}\n\n{_format_failure_email(failed)}"
+            body = f"{message}\n\n{_format_report_email(report_rows)}"
 
             try:
                 logger.info("Sending notification email to %s recipient(s)", len(selected_recipients))
@@ -403,15 +405,28 @@ def create_app() -> Flask:
 
 
 
-def _format_failure_email(failed: list[dict]) -> str:
-    if not failed:
-        return "All monitored processes are healthy."
+def _format_report_email(report_rows: list[dict]) -> str:
+    if not report_rows:
+        return "No monitored processes are configured."
 
-    lines = ["The following processes failed:"]
-    for process in failed:
-        lines.append(f"- {process['tag_name']} ({process['folder_path']}):")
-        for reason in process["reasons"]:
-            lines.append(f"  * {reason}")
+    failed = [row for row in report_rows if row["status"] == "Failed"]
+    succeeded = [row for row in report_rows if row["status"] != "Failed"]
+    lines = [
+        f"Run summary: {len(report_rows)} total process(es), "
+        f"{len(succeeded)} successful, {len(failed)} failed.",
+        "",
+    ]
+
+    for process in report_rows:
+        lines.append(
+            f"- {process['tag_name']} ({process['folder_path']}): {process['status']}"
+        )
+        reasons = process.get("reasons") or []
+        if reasons:
+            for reason in reasons:
+                lines.append(f"  * {reason}")
+        else:
+            lines.append("  * No issues detected.")
     return "\n".join(lines)
 
 
