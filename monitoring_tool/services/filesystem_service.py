@@ -19,7 +19,7 @@ def evaluate_folder(folder_path: str) -> FileCheckResult:
     if not folder.exists():
         return FileCheckResult(True, f"Folder missing: {folder_path}")
 
-    if any(folder.iterdir()):
+    if any(child.is_file() for child in folder.iterdir()):
         return FileCheckResult(True, "Folder is not empty")
 
     return FileCheckResult(False, None)
