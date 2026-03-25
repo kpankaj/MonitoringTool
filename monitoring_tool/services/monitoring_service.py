@@ -46,9 +46,15 @@ def run_monitoring_cycle(now: datetime | None = None, force_run: bool = False) -
             scheduled_time = (process.get("scheduled_time") or "").strip()
             check_query = (process.get("check_query") or "").strip()
 
+            if scheduled_time and not _should_run_scheduled_check(tag_name, scheduled_time, current_time):
+                logger.debug(
+                    "Skipping process %s because scheduled time gate is not satisfied (scheduled_time=%s)",
+                    tag_name,
+                    scheduled_time,
+                )
+                continue
+
             should_run_query = bool(check_query)
-            if should_run_query and scheduled_time and not force_run:
-                should_run_query = _should_run_scheduled_check(tag_name, scheduled_time, current_time)
 
             _run_filesystem_check(process, current_time, check_query if should_run_query else None)
         except Exception as exc:  # noqa: BLE001

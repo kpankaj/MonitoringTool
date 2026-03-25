@@ -6,6 +6,37 @@ from monitoring_tool.services import filesystem_service, monitoring_service, que
 
 
 class MonitoringServiceTests(unittest.TestCase):
+    def test_scheduled_interface_runs_when_time_is_reached(self) -> None:
+        process = {
+            "tag_name": "job-a",
+            "scheduled_time": "08:00",
+            "check_query": "select 1",
+            "folder_path": "/tmp",
+        }
+        now = datetime(2024, 1, 1, 8, 0, 0)
+
+        with patch(
+            "monitoring_tool.services.monitoring_service.process_service.list_processes",
+            return_value=[process],
+        ), patch(
+            "monitoring_tool.services.monitoring_service.filesystem_service.evaluate_folder",
+            return_value=filesystem_service.FileCheckResult(False, None),
+        ), patch(
+            "monitoring_tool.services.monitoring_service.query_service.evaluate_query",
+            return_value=query_service.QueryCheckResult(False, None),
+        ), patch(
+            "monitoring_tool.services.monitoring_service.report_service.get_latest_run",
+            return_value=None,
+        ), patch(
+            "monitoring_tool.services.monitoring_service.report_service.record_run"
+        ) as record_run:
+            monitoring_service.run_monitoring_cycle(now=now)
+
+        record_run.assert_called_once()
+        args = record_run.call_args.kwargs
+        self.assertEqual(args["tag_name"], "job-a")
+        self.assertEqual(args["status"], "Success")
+
     def test_scheduled_check_skips_before_time(self) -> None:
         process = {
             "tag_name": "job-b",
@@ -26,9 +57,7 @@ class MonitoringServiceTests(unittest.TestCase):
         ) as record_run:
             monitoring_service.run_monitoring_cycle(now=now)
 
-        record_run.assert_called_once()
-        args = record_run.call_args.kwargs
-        self.assertEqual(args["status"], "Success")
+        record_run.assert_not_called()
 
     def test_scheduled_check_invalid_time_records_failure(self) -> None:
         process = {
@@ -50,10 +79,7 @@ class MonitoringServiceTests(unittest.TestCase):
         ) as record_run:
             monitoring_service.run_monitoring_cycle(now=now)
 
-        record_run.assert_called_once()
-        args = record_run.call_args.kwargs
-        self.assertEqual(args["tag_name"], "job-c")
-        self.assertEqual(args["status"], "Success")
+        record_run.assert_not_called()
 
     def test_scheduled_check_runs_once_per_day(self) -> None:
         process = {
@@ -79,9 +105,9 @@ class MonitoringServiceTests(unittest.TestCase):
         ) as record_run:
             monitoring_service.run_monitoring_cycle(now=now)
 
-        record_run.assert_called_once()
+        record_run.assert_not_called()
 
-    def test_scheduled_check_force_run_ignores_time_gate(self) -> None:
+    def test_scheduled_check_force_run_still_respects_time_gate(self) -> None:
         process = {
             "tag_name": "job-force",
             "scheduled_time": "23:59",
@@ -104,11 +130,7 @@ class MonitoringServiceTests(unittest.TestCase):
         ) as record_run:
             monitoring_service.run_monitoring_cycle(now=now, force_run=True)
 
-        record_run.assert_called_once()
-        args = record_run.call_args.kwargs
-        self.assertEqual(args["tag_name"], "job-force")
-        self.assertEqual(args["status"], "Success")
-        self.assertEqual(args["check_type"], "filesystem")
+        record_run.assert_not_called()
 
     def test_query_runs_without_scheduled_time(self) -> None:
         process = {
