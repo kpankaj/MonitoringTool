@@ -28,6 +28,14 @@ class FilesystemServiceTests(unittest.TestCase):
         self.assertTrue(result.is_failed)
         self.assertEqual(result.reason, 'Folder is not empty')
 
+    def test_evaluate_folder_with_subdirectory_success(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            Path(tmp_dir, 'nested-dir').mkdir()
+            result = filesystem_service.evaluate_folder(tmp_dir)
+
+        self.assertFalse(result.is_failed)
+        self.assertIsNone(result.reason)
+
     def test_evaluate_uc4_file_missing(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             mocked_now = datetime(2024, 1, 2, 9, 0, 0)
