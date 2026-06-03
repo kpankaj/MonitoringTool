@@ -1,6 +1,5 @@
 import logging
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 
 
@@ -31,10 +30,11 @@ def evaluate_uc4_file(folder_path: str) -> FileCheckResult:
     if not folder.exists():
         return FileCheckResult(True, f"Folder missing: {folder_path}")
 
-    current_date = datetime.now().strftime("%Y%m%d")
-    expected_pattern = f"_trigger_{current_date}"
+    expected_pattern = "_trigger_"
     has_expected_file = any(
-        child.is_file() and child.suffix == ".xml" and expected_pattern in child.stem
+        child.is_file()
+        and child.suffix.lower() == ".xml"
+        and expected_pattern in child.stem
         for child in folder.iterdir()
     )
     if not has_expected_file:
