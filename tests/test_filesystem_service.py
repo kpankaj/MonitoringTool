@@ -1,8 +1,6 @@
 import tempfile
 import unittest
-from datetime import datetime
 from pathlib import Path
-from unittest.mock import patch
 
 from monitoring_tool.services import filesystem_service
 
@@ -38,23 +36,15 @@ class FilesystemServiceTests(unittest.TestCase):
 
     def test_evaluate_uc4_file_missing(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
-            mocked_now = datetime(2024, 1, 2, 9, 0, 0)
-            with patch('monitoring_tool.services.filesystem_service.datetime') as mock_datetime:
-                mock_datetime.now.return_value = mocked_now
-                mock_datetime.strftime = datetime.strftime
-                result = filesystem_service.evaluate_uc4_file(tmp_dir)
+            result = filesystem_service.evaluate_uc4_file(tmp_dir)
 
         self.assertTrue(result.is_failed)
-        self.assertEqual(result.reason, 'Missing UC4 trigger file containing: _trigger_20240102')
+        self.assertEqual(result.reason, 'Missing UC4 trigger file containing: _trigger_')
 
     def test_evaluate_uc4_file_with_matching_file_success(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             Path(tmp_dir, 'job_trigger_20240102.xml').write_text('ok')
-            mocked_now = datetime(2024, 1, 2, 9, 0, 0)
-            with patch('monitoring_tool.services.filesystem_service.datetime') as mock_datetime:
-                mock_datetime.now.return_value = mocked_now
-                mock_datetime.strftime = datetime.strftime
-                result = filesystem_service.evaluate_uc4_file(tmp_dir)
+            result = filesystem_service.evaluate_uc4_file(tmp_dir)
 
         self.assertFalse(result.is_failed)
         self.assertIsNone(result.reason)
@@ -62,11 +52,15 @@ class FilesystemServiceTests(unittest.TestCase):
     def test_evaluate_uc4_file_with_prefixed_matching_file_success(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             Path(tmp_dir, 'MAM_AI_612_trigger_20260317073719.xml').write_text('ok')
-            mocked_now = datetime(2026, 3, 17, 9, 0, 0)
-            with patch('monitoring_tool.services.filesystem_service.datetime') as mock_datetime:
-                mock_datetime.now.return_value = mocked_now
-                mock_datetime.strftime = datetime.strftime
-                result = filesystem_service.evaluate_uc4_file(tmp_dir)
+            result = filesystem_service.evaluate_uc4_file(tmp_dir)
+
+        self.assertFalse(result.is_failed)
+        self.assertIsNone(result.reason)
+
+    def test_evaluate_uc4_file_with_previous_dated_timestamp_success(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            Path(tmp_dir, 'MAM_CI_935_trigger_20260602142515.xml').write_text('ok')
+            result = filesystem_service.evaluate_uc4_file(tmp_dir)
 
         self.assertFalse(result.is_failed)
         self.assertIsNone(result.reason)
