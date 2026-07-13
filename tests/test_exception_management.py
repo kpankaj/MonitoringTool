@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime
+from datetime import date, datetime
 from unittest.mock import patch
 
 from monitoring_tool.app import create_app
@@ -251,12 +251,34 @@ class ReportsRouteTests(unittest.TestCase):
                 }
             ],
         ) as list_log_event_details:
-            response = client.get('/reports/log-viewer?tag_name=INT_A')
+            response = client.get('/reports/log-viewer?tag_name=INT_A&period_from=2026-03-18&period_to=2026-03-19')
 
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Log Event Details', response.data)
         self.assertIn(b'Sample event', response.data)
-        list_log_event_details.assert_called_once_with(tag_name='INT_A', severity='FATAL')
+        list_log_event_details.assert_called_once_with(
+            tag_name='INT_A',
+            severity='FATAL',
+            period_from=date(2026, 3, 18),
+            period_to=date(2026, 3, 19),
+        )
+
+    def test_log_viewer_rejects_period_longer_than_seven_days(self) -> None:
+        with patch('monitoring_tool.app.monitoring_service.start_scheduler'):
+            app = create_app()
+
+        client = app.test_client()
+        with patch(
+            'monitoring_tool.app.process_service.list_processes',
+            return_value=[{'tag_name': 'INT_A'}],
+        ), patch(
+            'monitoring_tool.app.query_service.list_log_event_details',
+        ) as list_log_event_details:
+            response = client.get('/reports/log-viewer?period_from=2026-03-01&period_to=2026-03-09')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'maximum interval between Period From and Period To is 7 days', response.data)
+        list_log_event_details.assert_not_called()
 
 
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime
+from datetime import date, datetime
 from unittest.mock import MagicMock, patch
 
 from monitoring_tool.services import filesystem_service, monitoring_service, query_service
@@ -328,11 +328,19 @@ class QueryServiceTests(unittest.TestCase):
             "pyodbc.connect",
             return_value=connection,
         ):
-            rows = query_service.list_log_event_details(tag_name="INT_A", severity="fatal")
+            rows = query_service.list_log_event_details(
+                tag_name="INT_A",
+                severity="fatal",
+                period_from=date(2026, 3, 18),
+                period_to=date(2026, 3, 19),
+            )
 
-        executed_query, severity_param, tag_param = cursor.execute.call_args.args
+        executed_query, period_from_param, period_to_param, severity_param, tag_param = cursor.execute.call_args.args
+        self.assertIn("LogTimestamp >= ? AND LogTimestamp < ?", executed_query)
         self.assertIn("UPPER(Severity) = ?", executed_query)
         self.assertIn("UPPER(Tag) = ?", executed_query)
+        self.assertEqual(period_from_param, date(2026, 3, 18))
+        self.assertEqual(period_to_param, date(2026, 3, 20))
         self.assertEqual(severity_param, "FATAL")
         self.assertEqual(tag_param, "INT_A")
         self.assertEqual(rows, [{"tag": "INT_A", "severity": "FATAL"}])

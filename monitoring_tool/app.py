@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import date, datetime, timedelta
 
 from flask import Flask, redirect, render_template, request, flash, url_for, jsonify
 from werkzeug.exceptions import HTTPException
@@ -285,6 +286,12 @@ def create_app() -> Flask:
         interfaces = sorted({process["tag_name"] for process in process_service.list_processes()})
         selected_tag = request.args.get("tag_name", "ALL").strip() or "ALL"
         selected_severity = request.args.get("severity", "FATAL").strip().upper() or "FATAL"
+        today = date.today()
+        period_from_raw = request.args.get("period_from", today.isoformat()).strip() or today.isoformat()
+        period_to_raw = request.args.get("period_to", today.isoformat()).strip() or today.isoformat()
+        period_from = today
+        period_to = today
+        period_is_valid = True
         log_events: list[dict] = []
         failure_summary: dict | None = None
 
@@ -293,6 +300,21 @@ def create_app() -> Flask:
 
         if selected_tag != "ALL" and selected_tag not in interfaces:
             selected_tag = "ALL"
+
+        try:
+            period_from = datetime.strptime(period_from_raw, "%Y-%m-%d").date()
+            period_to = datetime.strptime(period_to_raw, "%Y-%m-%d").date()
+        except ValueError:
+            period_is_valid = False
+            flash("Period From and Period To must be valid dates.", "error")
+
+        if period_is_valid and period_from > period_to:
+            period_is_valid = False
+            flash("Period From cannot be after Period To.", "error")
+
+        if period_is_valid and period_to - period_from > timedelta(days=7):
+            period_is_valid = False
+            flash("The maximum interval between Period From and Period To is 7 days.", "error")
 
         if selected_tag != "ALL":
             latest_run = report_service.get_latest_run(selected_tag)
@@ -305,22 +327,29 @@ def create_app() -> Flask:
                 "reasons": reasons,
             }
 
-        if selected_tag or selected_severity:
+        if period_is_valid and (selected_tag or selected_severity):
             try:
                 log_events = query_service.list_log_event_details(
                     tag_name=None if selected_tag == "ALL" else selected_tag,
                     severity=selected_severity,
+                    period_from=period_from,
+                    period_to=period_to,
                 )
-                print(
-                    "[DEBUG] log_viewer loaded "
-                    f"{len(log_events)} event(s) for selected_tag={selected_tag!r}, "
-                    f"selected_severity={selected_severity!r}"
+                logger.debug(
+                    "log_viewer loaded %d event(s) for selected_tag=%r, selected_severity=%r, period_from=%s, period_to=%s",
+                    len(log_events),
+                    selected_tag,
+                    selected_severity,
+                    period_from,
+                    period_to,
                 )
             except Exception as exc:  # noqa: BLE001
                 logger.exception(
-                    "Failed to load log event details for tag=%s severity=%s",
+                    "Failed to load log event details for tag=%s severity=%s period_from=%s period_to=%s",
                     selected_tag,
                     selected_severity,
+                    period_from,
+                    period_to,
                 )
                 flash(f"Failed to load log event details: {exc}", "error")
 
@@ -329,6 +358,8 @@ def create_app() -> Flask:
             interfaces=interfaces,
             selected_tag=selected_tag,
             selected_severity=selected_severity,
+            selected_period_from=period_from_raw,
+            selected_period_to=period_to_raw,
             log_events=log_events,
             failure_summary=failure_summary,
         )

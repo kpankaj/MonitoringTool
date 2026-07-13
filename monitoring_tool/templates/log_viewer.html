@@ -26,6 +26,14 @@
         <option value="ERROR" {% if selected_severity == "ERROR" %}selected{% endif %}>ERROR</option>
       </select>
     </label>
+    <label>
+      Period From
+      <input type="date" name="period_from" value="{{ selected_period_from }}" required>
+    </label>
+    <label>
+      Period To
+      <input type="date" name="period_to" value="{{ selected_period_to }}" required>
+    </label>
     <button type="submit">View Report</button>
   </form>
 
@@ -60,7 +68,7 @@
   {% endif %}
 
   {% if selected_tag or selected_severity %}
-    <p class="muted">Showing {{ selected_severity }} events for {% if selected_tag == "ALL" %}all interfaces{% else %}{{ selected_tag }}{% endif %} from today.</p>
+    <p class="muted">Showing {{ selected_severity }} events for {% if selected_tag == "ALL" %}all interfaces{% else %}{{ selected_tag }}{% endif %} from {{ selected_period_from }} to {{ selected_period_to }}.</p>
     {% if log_events %}
       <div class="table-wrapper">
         <table data-log-event-table>
