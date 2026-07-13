@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass
+from datetime import date, timedelta
 
 from monitoring_tool import config, db
 
@@ -55,7 +56,7 @@ def _query_sqlserver(query: str):
 
 
 
-def _format_query_with_params(query: str, params: list[str]) -> str:
+def _format_query_with_params(query: str, params: list) -> str:
     formatted_query = query
     for param in params:
         if isinstance(param, str):
@@ -89,20 +90,35 @@ def _fetch_all_rows(cursor) -> tuple[list[str], list]:
     return columns, rows
 
 
-def list_log_event_details(tag_name: str | None = None, severity: str | None = None) -> list[dict]:
-    logger.debug("Fetching log event details for tag=%s severity=%s", tag_name, severity)
+def list_log_event_details(
+    tag_name: str | None = None,
+    severity: str | None = None,
+    period_from: date | None = None,
+    period_to: date | None = None,
+) -> list[dict]:
+    logger.debug(
+        "Fetching log event details for tag=%s severity=%s period_from=%s period_to=%s",
+        tag_name,
+        severity,
+        period_from,
+        period_to,
+    )
     if not config.SQLSERVER_CONNECTION_STRING:
         raise RuntimeError("SQL Server connection is not configured.")
 
     import pyodbc
 
+    period_from = period_from or date.today()
+    period_to = period_to or period_from
+    period_to_exclusive = period_to + timedelta(days=1)
+
     query = [
         "SELECT Tag AS tag, LogTimestamp AS log_timestamp, Severity AS severity, "
         "EventData AS event_data, [Exception] AS exception_text "
         "FROM LogEventDetails "
-        "WHERE LogTimestamp >= CAST(GETDATE() AS date) "
+        "WHERE LogTimestamp >= ? AND LogTimestamp < ? "
     ]
-    params: list[str] = []
+    params: list[str | date] = [period_from, period_to_exclusive]
 
     if severity:
         query.append("AND UPPER(Severity) = ? ")
