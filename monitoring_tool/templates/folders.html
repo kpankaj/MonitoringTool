@@ -36,6 +36,16 @@
         placeholder="SELECT * FROM failure_events WHERE status = 'FAILED'"
       >{{ edit_folder.check_query if edit_folder and edit_folder.check_query else "" }}</textarea>
     </label>
+    <label class="full-width">
+      Failure Email Template (optional)
+      <select name="email_template">
+        <option value="">Use the default plain-text report</option>
+        {% for template_name in email_templates %}
+          <option value="{{ template_name }}" {{ "selected" if edit_folder and edit_folder.email_template == template_name else "" }}>{{ template_name }}</option>
+        {% endfor %}
+      </select>
+      <span class="helper-text">The selected HTML template is used when this interface fails.</span>
+    </label>
     <div class="full-width uc4-config-row">
       <label class="checkbox-field">
         <span>UC4 Check</span>
@@ -70,6 +80,7 @@
         <th class="path-column">Folder</th>
         <th>Daily Check Time</th>
         <th>DB Query</th>
+        <th>Email Template</th>
         <th class="path-column">UC4 Folder</th>
         <th>UC4 File Check</th>
         <th>Actions</th>
@@ -88,6 +99,7 @@
               <span class="muted">None</span>
             {% endif %}
           </td>
+          <td>{{ folder.email_template or "Default" }}</td>
           <td class="path-column">{{ folder.uc4_folder_path or "—" }}</td>
           <td>{{ "Enabled" if folder.check_uc4_file else "Not enabled" }}</td>
 
@@ -103,7 +115,7 @@
         </tr>
       {% else %}
         <tr>
-          <td colspan="7">No folders configured.</td>
+          <td colspan="8">No folders configured.</td>
         </tr>
       {% endfor %}
     </tbody>

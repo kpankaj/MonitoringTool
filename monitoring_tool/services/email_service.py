@@ -18,6 +18,7 @@ def send_failure_email(
     use_starttls: bool = False,
     use_ssl: bool = False,
     delivery_method: str = "smtp",
+    html_body: str | None = None,
 ) -> None:
     recipients_list = list(recipients)
     logger.info(
@@ -30,9 +31,11 @@ def send_failure_email(
     message["To"] = ", ".join(recipients_list)
     message["Subject"] = subject
     message.set_content(body)
+    if html_body:
+        message.add_alternative(html_body, subtype="html")
 
     if delivery_method == "outlook_desktop":
-        _send_email_with_outlook_desktop(recipients_list, subject, body)
+        _send_email_with_outlook_desktop(recipients_list, subject, body, html_body)
         return
 
     smtp_client = smtplib.SMTP_SSL if use_ssl else smtplib.SMTP
@@ -44,7 +47,9 @@ def send_failure_email(
         smtp.send_message(message)
 
 
-def _send_email_with_outlook_desktop(recipients: list[str], subject: str, body: str) -> None:
+def _send_email_with_outlook_desktop(
+    recipients: list[str], subject: str, body: str, html_body: str | None = None
+) -> None:
     try:
         import win32com.client  # type: ignore[import-not-found]
     except ImportError as exc:
@@ -58,7 +63,10 @@ def _send_email_with_outlook_desktop(recipients: list[str], subject: str, body: 
         mail_item = outlook.CreateItem(0)
         mail_item.To = "; ".join(recipients)
         mail_item.Subject = subject
-        mail_item.Body = body
+        if html_body:
+            mail_item.HTMLBody = html_body
+        else:
+            mail_item.Body = body
         mail_item.Send()
     except Exception as exc:  # noqa: BLE001
         raise RuntimeError(f"Failed to send email with Outlook desktop: {exc}") from exc

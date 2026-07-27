@@ -65,6 +65,7 @@ def list_process_reports(processes: list[dict]) -> list[dict]:
             {
                 "tag_name": tag_name,
                 "folder_path": process["folder_path"],
+                "email_template": process.get("email_template"),
                 "reasons": reasons,
                 "fatal_events": fatal_events,
                 "uc4_status": uc4_status,

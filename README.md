@@ -41,6 +41,13 @@ export EMAIL_DELIVERY_METHOD=smtp
 
 Recipients can be managed from the Configure page.
 
+### Failure Email Templates
+
+An HTML email template can be selected for each interface on **Folder Paths**. Sample
+templates are stored in `email_templates/`; set `MONITORING_EMAIL_TEMPLATE_DIR` to
+use another directory. Templates support `$interface_name`, `$status`, `$folder_path`,
+`$failure_reasons` (an HTML list), and `$run_summary`. Template values are HTML-escaped.
+
 ### Microsoft Outlook SMTP
 To use Microsoft Outlook / Microsoft 365 SMTP with authentication:
 

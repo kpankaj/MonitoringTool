@@ -22,6 +22,23 @@ class EmailServiceTests(unittest.TestCase):
         smtp_client.assert_called_once_with("localhost", 25)
         smtp_instance.send_message.assert_called_once()
 
+    def test_send_failure_email_adds_html_alternative(self) -> None:
+        with patch("monitoring_tool.services.email_service.smtplib.SMTP") as smtp_client:
+            smtp_instance = smtp_client.return_value.__enter__.return_value
+            email_service.send_failure_email(
+                smtp_host="localhost",
+                smtp_port=25,
+                sender="monitor@example.com",
+                recipients=["ops@example.com"],
+                subject="failure",
+                body="Plain-text fallback",
+                html_body="<strong>Failure</strong>",
+            )
+
+        message = smtp_instance.send_message.call_args.args[0]
+        self.assertTrue(message.is_multipart())
+        self.assertEqual(message.get_body(preferencelist=("html",)).get_content().strip(), "<strong>Failure</strong>")
+
     def test_send_failure_email_uses_outlook_desktop_when_configured(self) -> None:
         mail_item = MagicMock()
         dispatch_client = MagicMock()
