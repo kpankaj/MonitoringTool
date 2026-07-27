@@ -9,6 +9,7 @@ REPO_ROOT = BASE_DIR.parent
 
 DB_PATH = Path(os.getenv("MONITORING_DB_PATH", REPO_ROOT / "monitoring_tool.db"))
 SCHEMA_PATH = Path(os.getenv("MONITORING_SCHEMA_PATH", BASE_DIR / "scripts" / "schema.sql"))
+EMAIL_TEMPLATE_DIR = Path(os.getenv("MONITORING_EMAIL_TEMPLATE_DIR", REPO_ROOT / "email_templates"))
 
 SMTP_HOST = os.getenv("SMTP_HOST", "localhost")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "25"))

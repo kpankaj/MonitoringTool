@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS processes (
     uc4_folder_path TEXT,
     scheduled_time TEXT,
     check_query TEXT,
+    email_template TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -78,6 +79,7 @@ def ensure_schema() -> None:
         _ensure_column(connection, "processes", "uc4_folder_path", "TEXT")
         _ensure_column(connection, "processes", "scheduled_time", "TEXT")
         _ensure_column(connection, "processes", "check_query", "TEXT")
+        _ensure_column(connection, "processes", "email_template", "TEXT")
 
 
 def _ensure_column(connection: sqlite3.Connection, table: str, column: str, definition: str) -> None:

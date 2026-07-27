@@ -8,7 +8,14 @@ from werkzeug.exceptions import HTTPException
 
 from monitoring_tool import config, db
 from monitoring_tool.logging_setup import configure_logging
-from monitoring_tool.services import email_service, monitoring_service, process_service, query_service, report_service
+from monitoring_tool.services import (
+    email_service,
+    email_template_service,
+    monitoring_service,
+    process_service,
+    query_service,
+    report_service,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -75,6 +82,13 @@ def _send_report_notification(report_rows: list[dict], subject: str, body_prefix
 
     smtp_settings = _resolve_smtp_settings()
     body = f"{body_prefix}\n\n{_format_report_email(report_rows)}"
+    summary = _format_report_summary(report_rows)
+    rendered_templates = [
+        email_template_service.render_failure(row["email_template"], row, summary)
+        for row in report_rows
+        if row.get("status") == "Failed" and row.get("email_template")
+    ]
+    html_body = "\n".join(rendered_templates) or None
     logger.info("Sending automatic report email to %s recipient(s)", len(recipients_list))
     email_service.send_failure_email(
         smtp_host=str(smtp_settings["smtp_host"]),
@@ -88,6 +102,7 @@ def _send_report_notification(report_rows: list[dict], subject: str, body_prefix
         use_starttls=bool(smtp_settings["use_starttls"]),
         use_ssl=bool(smtp_settings["use_ssl"]),
         delivery_method=str(smtp_settings["delivery_method"]),
+        html_body=html_body,
     )
 
 
@@ -159,6 +174,7 @@ def create_app() -> Flask:
             uc4_folder_path = request.form.get("uc4_folder_path", "").strip()
             scheduled_time = request.form.get("scheduled_time", "").strip()
             check_query = request.form.get("check_query", "").strip()
+            email_template = request.form.get("email_template", "").strip()
             existing_tags = set(process_service.list_tags())
 
             if not tag_name or not folder_path:
@@ -173,6 +189,11 @@ def create_app() -> Flask:
                 flash("UC4 folder path is required when UC4 check is enabled.", "error")
                 return redirect(url_for("folders"))
 
+            available_templates = email_template_service.list_templates()
+            if email_template and email_template not in available_templates:
+                flash("Select a valid email template.", "error")
+                return redirect(url_for("folders"))
+
             logger.info("Saving folder config for tag %s", tag_name)
             process_service.set_folder(
                 tag_name=tag_name,
@@ -181,6 +202,7 @@ def create_app() -> Flask:
                 uc4_folder_path=uc4_folder_path or None,
                 scheduled_time=scheduled_time or None,
                 check_query=check_query or None,
+                email_template=email_template or None,
             )
             message_prefix = "Updated" if editing_tag else "Saved"
             flash(f"{message_prefix} folder for {tag_name}.", "success")
@@ -190,7 +212,13 @@ def create_app() -> Flask:
         folders = process_service.list_folder_configs()
         edit_tag = request.args.get("edit_tag", "").strip()
         edit_folder = next((folder for folder in folders if folder["tag_name"] == edit_tag), None)
-        return render_template("folders.html", tags=tags, folders=folders, edit_folder=edit_folder)
+        return render_template(
+            "folders.html",
+            tags=tags,
+            folders=folders,
+            edit_folder=edit_folder,
+            email_templates=email_template_service.list_templates(),
+        )
 
 
     @app.route("/configure/delete", methods=["POST"])
@@ -459,6 +487,11 @@ def _format_report_email(report_rows: list[dict]) -> str:
         else:
             lines.append("  * No issues detected.")
     return "\n".join(lines)
+
+
+def _format_report_summary(report_rows: list[dict]) -> str:
+    failed_count = sum(row.get("status") == "Failed" for row in report_rows)
+    return f"{len(report_rows)} total process(es), {failed_count} failed."
 
 
 if __name__ == "__main__":

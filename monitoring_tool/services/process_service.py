@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 def list_processes() -> list[dict]:
     logger.debug("Listing configured processes")
     rows = db.query_all(
-        "SELECT id, tag_name, folder_path, check_uc4_file, uc4_folder_path, scheduled_time, check_query "
+        "SELECT id, tag_name, folder_path, check_uc4_file, uc4_folder_path, scheduled_time, check_query, email_template "
         "FROM processes WHERE folder_path != '' ORDER BY tag_name"
     )
 
@@ -31,7 +31,7 @@ def add_tag(tag_name: str) -> None:
 
 def list_folder_configs() -> list[dict]:
     rows = db.query_all(
-        "SELECT tag_name, folder_path, check_uc4_file, uc4_folder_path, scheduled_time, check_query "
+        "SELECT tag_name, folder_path, check_uc4_file, uc4_folder_path, scheduled_time, check_query, email_template "
         "FROM processes WHERE folder_path != '' ORDER BY tag_name"
     )
     return [dict(row) for row in rows]
@@ -44,19 +44,20 @@ def set_folder(
     uc4_folder_path: str | None,
     scheduled_time: str | None,
     check_query: str | None,
+    email_template: str | None,
 ) -> None:
     logger.info("Updating folder for tag %s to %s", tag_name, folder_path)
     db.execute(
-        "UPDATE processes SET folder_path = ?, check_uc4_file = ?, uc4_folder_path = ?, scheduled_time = ?, check_query = ? "
+        "UPDATE processes SET folder_path = ?, check_uc4_file = ?, uc4_folder_path = ?, scheduled_time = ?, check_query = ?, email_template = ? "
         "WHERE tag_name = ?",
-        [folder_path, int(check_uc4_file), uc4_folder_path, scheduled_time, check_query, tag_name],
+        [folder_path, int(check_uc4_file), uc4_folder_path, scheduled_time, check_query, email_template, tag_name],
     )
 
 
 def clear_folder(tag_name: str) -> None:
     logger.info("Clearing folder configuration for tag %s", tag_name)
     db.execute(
-        "UPDATE processes SET folder_path = '', check_uc4_file = 0, uc4_folder_path = NULL, scheduled_time = NULL, check_query = NULL "
+        "UPDATE processes SET folder_path = '', check_uc4_file = 0, uc4_folder_path = NULL, scheduled_time = NULL, check_query = NULL, email_template = NULL "
         "WHERE tag_name = ?",
         [tag_name],
     )
@@ -78,4 +79,3 @@ def remove_recipient(email: str) -> None:
 def remove_tag(tag_name: str) -> None:
     logger.info("Removing process tag %s", tag_name)
     db.execute("DELETE FROM processes WHERE tag_name = ?", [tag_name])
-

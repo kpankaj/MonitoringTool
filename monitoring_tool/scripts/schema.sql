@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS processes (
     uc4_folder_path TEXT,
     scheduled_time TEXT,
     check_query TEXT,
+    email_template TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
