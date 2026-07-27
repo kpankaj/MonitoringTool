@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 
 from monitoring_tool import config, db
 
@@ -110,7 +110,13 @@ def list_log_event_details(
 
     period_from = period_from or date.today()
     period_to = period_to or period_from
-    period_to_exclusive = period_to + timedelta(days=1)
+    # The legacy "SQL Server" ODBC driver cannot bind Python ``date`` values:
+    # pyodbc maps them to SQL_TYPE_DATE, which that driver reports as the
+    # unsupported SQLBindParameter feature (HYC00).  Bind midnight timestamps
+    # instead. SQL_TIMESTAMP is supported by the legacy driver and preserves
+    # the same inclusive-start/exclusive-end date-range semantics.
+    period_from_timestamp = datetime.combine(period_from, time.min)
+    period_to_exclusive = datetime.combine(period_to + timedelta(days=1), time.min)
 
     query = [
         "SELECT Tag AS tag, LogTimestamp AS log_timestamp, Severity AS severity, "
@@ -118,7 +124,7 @@ def list_log_event_details(
         "FROM LogEventDetails "
         "WHERE LogTimestamp >= ? AND LogTimestamp < ? "
     ]
-    params: list[str | date] = [period_from, period_to_exclusive]
+    params: list[str | datetime] = [period_from_timestamp, period_to_exclusive]
 
     if severity:
         query.append("AND UPPER(Severity) = ? ")
