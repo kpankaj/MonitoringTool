@@ -26,13 +26,9 @@
         <option value="ERROR" {% if selected_severity == "ERROR" %}selected{% endif %}>ERROR</option>
       </select>
     </label>
-    <label>
-      Period From
-      <input type="date" name="period_from" value="{{ selected_period_from }}" required>
-    </label>
-    <label>
-      Period To
-      <input type="date" name="period_to" value="{{ selected_period_to }}" required>
+    <label class="checkbox-field">
+      Past 7 days
+      <input type="checkbox" name="past_7_days" {{ "checked" if include_past_7_days else "" }}>
     </label>
     <button type="submit">View Report</button>
   </form>
