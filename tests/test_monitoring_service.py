@@ -339,8 +339,10 @@ class QueryServiceTests(unittest.TestCase):
         self.assertIn("LogTimestamp >= ? AND LogTimestamp < ?", executed_query)
         self.assertIn("UPPER(Severity) = ?", executed_query)
         self.assertIn("UPPER(Tag) = ?", executed_query)
-        self.assertEqual(period_from_param, date(2026, 3, 18))
-        self.assertEqual(period_to_param, date(2026, 3, 20))
+        # The legacy SQL Server ODBC driver supports SQL_TIMESTAMP parameters,
+        # but fails with HYC00 when pyodbc binds Python dates as SQL_TYPE_DATE.
+        self.assertEqual(period_from_param, datetime(2026, 3, 18))
+        self.assertEqual(period_to_param, datetime(2026, 3, 20))
         self.assertEqual(severity_param, "FATAL")
         self.assertEqual(tag_param, "INT_A")
         self.assertEqual(rows, [{"tag": "INT_A", "severity": "FATAL"}])
